@@ -1,0 +1,30 @@
+# Virtual environments
+.venv/
+env/
+venv/
+fresh_env/
+
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Internal benchmark & scratch tools (not for submission)
+ref_solution/
+submission/
+cross_eval.py
+phase2_compliance.py
+phase6_robustness.py
+create_holdout_new.py
+generate_red_team.py
+adversarial_test.py
+verify_submission.py
+my_tests_notes.jsonl
+frozen_holdout.jsonl
+*.zip

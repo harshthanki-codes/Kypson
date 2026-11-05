@@ -34,17 +34,21 @@ VALID_CATEGORIES = (
 # -- Devanagari digit → ASCII digit --
 _DEVA_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
 
-# -- Devanagari word → Romanised equivalent --
+# -- Devanagari word → Romanised equivalent (sorted longest-first) --
 _DEVA_WORDS = [
+    ("कार्टन", " carton "), ("जीएसएम", " gsm "), ("माइक्रोन", " micron "),
+    ("अहमदाबाद", " Ahmedabad "), ("हैदराबाद", " Hyderabad "), ("कोलकाता", " Kolkata "),
+    ("वडोदरा", " Vadodara "), ("लखनऊ", " Lucknow "), ("कानपुर", " Kanpur "),
+    ("नागपुर", " Nagpur "), ("मुंबई", " Mumbai "), ("दिल्ली", " Delhi "),
+    ("जयपुर", " Jaipur "), ("इंदौर", " Indore "), ("भोपाल", " Bhopal "),
+    ("सूरत", " Surat "), ("चेन्नई", " Chennai "), ("सीमेंट", " cement "),
     ("हज़ार", " hazaar "), ("हजार", " hazaar "), ("लाख", " lakh "),
     ("करोड़", " crore "), ("चाहिए", " chahiye "), ("चाहिये", " chahiye "),
     ("बैग", " bag "), ("बोप्प", " bopp "), ("बॉक्स", " box "),
-    ("पाउच", " pouch "), ("फिल्म", " film "), ("नागपुर", " Nagpur "),
-    ("मुंबई", " Mumbai "), ("दिल्ली", " Delhi "), ("जयपुर", " Jaipur "),
-    ("वडोदरा", " Vadodara "), ("जंबो", " jumbo "), ("जम्बो", " jumbo "),
-    ("पीस", " pcs "), ("किलो", " kg "), ("टन", " ton "),
-    ("सैक", " sack "), ("बोरी", " sack "), ("कार्टन", " carton "),
-    ("जीएसएम", " gsm "), ("माइक्रोन", " micron "), ("प्लाई", " ply "),
+    ("पाउच", " pouch "), ("फिल्म", " film "), ("जंबो", " jumbo "),
+    ("जम्बो", " jumbo "), ("पीस", " pcs "), ("किलो", " kg "),
+    ("सैक", " sack "), ("बोरी", " sack "), ("प्लाई", " ply "),
+    ("टन", " ton "),
 ]
 
 # -- Hindi fractional prefixes → float multiplier --
@@ -105,7 +109,7 @@ _PRICE_WORDS = frozenset({
 _PRODUCT_NOUNS = frozenset({
     "bag", "bags", "sack", "sacks", "pouch", "pouches",
     "box", "boxes", "carton", "cartons", "packet", "packets",
-    "packing", "bore", "container",
+    "packing", "bore", "bori", "container",
 })
 
 # -- Location stopwords: words that must NEVER be returned as a location --
@@ -305,6 +309,12 @@ def mask_interfering_patterns(text: str) -> str:
     # Lead times: "10 days", "2 weeks"
     text = re.sub(r"\b\d+\s*(?:days?|weeks?|months?)\b", " ", text, flags=re.I)
 
+    # Gram / milliliter pack contents: "500 gm", "250g pack", "100 ml" (fill size, not order quantity)
+    text = re.sub(
+        r"\b\d+(?:\.\d+)?\s*(?:gm|gms|grams?|g\b|ml|ltrs?|litres?|liters?)(?!\s*/\s*m2)\b",
+        " ", text, flags=re.I,
+    )
+
     # Collapse whitespace
     text = re.sub(r"\s+", " ", text).strip()
     return text
@@ -322,27 +332,15 @@ def classify_category(text: str) -> str:
     # Checked first because "jumbo bag" contains "bag" which could match others.
     if re.search(r"\bfibc\b", t):
         return "fibc"
-    if re.search(r"\b(?:jumbo|jambo)\s*(?:bags?|bulk)?\b", t) and (
-        re.search(r"\b(?:bags?|ton|swl|capacity|cap|load)\b", t) or re.search(r"\b(?:jumbo|jambo)\s*bag", t)
-    ):
+    if re.search(r"\b(?:jumbo|jambo)\b", t) and not re.search(r"\b(?:roll|film|box|carton)\b", t):
         return "fibc"
-    if re.search(r"\bbulk\s*bag", t):
-        return "fibc"
-    if re.search(r"\bbig\s*bag", t):
-        return "fibc"
-    if re.search(r"\bbaffle\s*bag", t):
+    if re.search(r"\b(?:bulk|big|baffle)\s*bags?\b", t):
         return "fibc"
 
-    # ── Priority 2: BOPP bag (BOPP + bag/sack/woven, but NOT "BOPP film") ──
+    # ── Priority 2: BOPP bag (BOPP bag/sack/woven, but NOT "BOPP film" or "BOPP tape/rolls") ──
     has_bopp = bool(re.search(r"\b(?:bopp|bop|boop|opp)\b", t))
-    has_bopp_film = bool(re.search(r"\b(?:bopp|bop|boop)\s*film\b", t))
-    has_bag_ctx = bool(
-        re.search(r"\b(?:bags?|sacks?|woven)\b", t)
-    )
-    if has_bopp and not has_bopp_film and has_bag_ctx:
-        return "bopp_bag"
-    # "BOPP laminated" + bag/sack always wins
-    if re.search(r"\b(?:bopp|bop|boop)\s+(?:laminated|lami)\b", t) and has_bag_ctx:
+    has_bopp_film = bool(re.search(r"\b(?:bopp|bop|boop)\s*(?:film|tape|roll)\b", t) or re.search(r"\b(?:tape|rolls?)\b", t))
+    if has_bopp and not has_bopp_film:
         return "bopp_bag"
 
     # ── Priority 3: Mono carton ──
@@ -354,7 +352,7 @@ def classify_category(text: str) -> str:
         return "mono_carton"
 
     # ── Priority 4: Film (shrink, stretch, cling, BOPP film, LDPE film) ──
-    if re.search(r"\b(?:shrink|shrnk|stretch)\s*(?:film|wrap)\b", t):
+    if re.search(r"\b(?:shrink|shrnk|stretch)\b", t) and not re.search(r"\b(?:bags?|sacks?|box|boxes|carton|pouch)\b", t):
         return "film"
     if re.search(r"\bcling\s*film\b", t):
         return "film"
@@ -374,7 +372,7 @@ def classify_category(text: str) -> str:
     if re.search(r"\bmaster\s*(?:carton|box)\b", t):
         return "corrugated_box"
 
-    # ── Priority 6: Woven sack / PP woven / cement / AD Star ──
+    # ── Priority 6: Woven sack / PP woven / cement / AD Star / bori ──
     if re.search(r"\bwoven\b", t):
         return "woven_sack"
     if re.search(r"\bpp\s*(?:bags?|sacks?)\b", t):
@@ -387,13 +385,17 @@ def classify_category(text: str) -> str:
         return "woven_sack"
     if re.search(r"\blaminated\s*sack\b", t):
         return "woven_sack"
+    if re.search(r"\b(?:bori|bore)\b", t):
+        return "woven_sack"
 
     # ── Priority 7: Pouch ──
     if re.search(r"\b(?:stand\s*up|zipper|spout|retort|vacuum)\s*pouch", t):
         return "pouch"
     if re.search(r"\bdoypack\b", t):
         return "pouch"
-    if re.search(r"\bpouche?s?\b", t):
+    if re.search(r"\b(?:pouche?s?|pauch(?:es)?)\b", t):
+        return "pouch"
+    if re.search(r"\bzipper\b", t):
         return "pouch"
     if re.search(r"\b(?:3|three)\s*side\s*seal\b", t):
         return "pouch"
@@ -617,7 +619,10 @@ def _find_quantity_candidates(text: str) -> list[dict]:
         unit = _peek_unit(text, m.end())
         # Also check if this number is right after a unit (e.g. "kg 500")
         if unit is None:
-            unit = _peek_unit_before(text, m.start())
+            before_txt = text[:m.start()].rstrip()
+            # Only peek unit before if not preceded by another number (e.g. "kg 500", but NOT "25 kg 10000")
+            if not re.search(r"\d+\s*\w+\s*$", before_txt):
+                unit = _peek_unit_before(text, m.start())
         candidates.append({
             "value": val,
             "start": m.start(), "end": m.end(),
@@ -659,7 +664,7 @@ def _is_capacity(candidate: dict, text: str) -> bool:
 def _is_fill_weight(
     candidate: dict, text: str, all_candidates: list, category: str
 ) -> bool:
-    """Return True if the candidate is a fill weight (e.g. '25 kg bag')."""
+    """Return True if the candidate is a fill weight (e.g. '25 kg bag', 'bag 50 kg')."""
     # Film is ordered by weight — kg/mt is the real quantity, not fill weight
     if category == "film":
         return False
@@ -671,23 +676,34 @@ def _is_fill_weight(
         return False
 
     after = text[candidate["end"] : candidate["end"] + 40].lower()
-    before = text[max(0, candidate["start"] - 20) : candidate["start"]].lower()
+    before = text[max(0, candidate["start"] - 25) : candidate["start"]].lower()
 
-    # Pattern: "<number> kg bag" — kg number right before a product noun
+    # Pattern: "<number> kg bag" or "bag <number> kg" (product noun before or after)
     for noun in _PRODUCT_NOUNS:
         if re.search(r"\b" + re.escape(noun) + r"\b", after[:25]):
+            return True
+        if re.search(r"\b" + re.escape(noun) + r"\b", before):
             return True
 
     # Pattern: "of <number> kg" — fill weight after "of"
     if re.search(r"\bof\s*$", before):
         return True
 
-    # Pattern: "ke <number> kg" (Hindi possessive)
-    if re.search(r"\bke\s*$", before) or re.search(r"\bka\s*$", before):
+    # Pattern: "ke <number> kg", "ka <number> kg"
+    if re.search(r"\b(?:ke|ka|ki|wale|wala|wali)\s*$", before):
+        return True
+
+    # Pattern: "<number> kg ke <quantity>" (Hindi: "25 kg ke 2 lakh")
+    if re.search(r"^\s*(?:ke|ka|ki|wale|wala|wali|qty|quantity)\b", after):
         return True
 
     # Pattern: "<number> kg x" or "x <number> kg" (multiplicative)
     if re.search(r"\bx\s*$", before) or re.search(r"^\s*x\b", after):
+        return True
+
+    # Pattern: standard bag fill weight (<= 100 kg) when another candidate exists
+    other_vals = [c["value"] for c in all_candidates if c is not candidate]
+    if candidate["value"] <= 100 and any(v >= 200 for v in other_vals):
         return True
 
     return False
@@ -712,14 +728,21 @@ def extract_quantity_and_unit(text: str, category: str) -> tuple:
         valid.append(c)
 
     if not valid:
-        # All filtered — fall back to the candidate with explicit pcs-type unit
+        # All filtered — check if any candidate has an explicit count (pcs)
         pcs_cands = [c for c in candidates if c["unit"] == "pcs"]
         if pcs_cands:
             valid = pcs_cands
         else:
-            valid = candidates  # last resort
+            # All candidates were purely capacity or fill weight specs (no order quantity)
+            return None, default_unit
 
     # Selection: prefer candidates with explicit unit
+    if category != "film":
+        count_cands = [c for c in valid if c["unit"] == "pcs" or c["value"] >= 200]
+        small_kg = [c for c in valid if c["unit"] in ("kg", "mt") and c["value"] <= 100]
+        if count_cands and small_kg:
+            valid = count_cands
+
     with_unit = [c for c in valid if c["unit"] is not None]
     if with_unit:
         if category == "film":
@@ -743,6 +766,14 @@ def extract_quantity_and_unit(text: str, category: str) -> tuple:
 # SECTION 7: LOCATION EXTRACTION
 # ═══════════════════════════════════════════════════════════════════════════
 
+_STATES = frozenset({
+    "maharashtra", "gujarat", "rajasthan", "punjab", "haryana", "uttar pradesh",
+    "madhya pradesh", "bihar", "jharkhand", "odisha", "west bengal", "karnataka",
+    "kerala", "tamil nadu", "telangana", "andhra pradesh", "assam", "chhattisgarh",
+    "uttarakhand", "himachal pradesh", "delhi", "goa", "up", "mp",
+})
+
+
 def _load_gazetteer() -> tuple:
     """Load city/location names; return (set_of_lowercase, list_sorted_by_length)."""
     entries = set()
@@ -764,10 +795,10 @@ def _load_gazetteer() -> tuple:
             "Bangladesh", "Bareilly", "Barmer", "Baroda", "Bathinda", "Belagavi",
             "Belgaum", "Belgium", "Bellary", "Bengaluru", "Berlin", "Bhagalpur",
             "Bharuch", "Bhavnagar", "Bhilai", "Bhilwara", "Bhimavaram", "Bhiwandi",
-            "Bhiwani", "Bhopal", "Bhubaneswar", "Bidar", "Bihar", "Bikaner",
+            "Bhiwani", "Bhiwadi", "Bhopal", "Bhubaneswar", "Bidar", "Bihar", "Bikaner",
             "Bilaspur", "Bokaro", "Bombay", "Brazil", "Cairo", "Calcutta",
             "Calicut", "Canada", "Chandigarh", "Chandrapur", "Chennai", "Chhattisgarh",
-            "China", "Chittagong", "Chittorgarh", "Cochin", "Coimbatore", "Colombo",
+            "China", "Chittagong", "Chittoor", "Chittorgarh", "Cochin", "Coimbatore", "Colombo",
             "Cuttack", "Daman", "Dar es Salaam", "Davangere", "Dehradun", "Delhi",
             "Dewas", "Dhaka", "Dhanbad", "Dhule", "Dibrugarh", "Dimapur",
             "Dindigul", "Doha", "Dombivli", "Dubai", "Durban", "Durg",
@@ -798,7 +829,7 @@ def _load_gazetteer() -> tuple:
             "New Zealand", "Nigeria", "Nizamabad", "Noida", "Odisha", "Oman",
             "Ongole", "Palakkad", "Palghar", "Pali", "Panaji", "Panchkula",
             "Panipat", "Panvel", "Paris", "Parwanoo", "Pathankot", "Patna",
-            "Philippines", "Pondicherry", "Poona", "Porbandar", "Prayagraj", "Puducherry",
+            "Philippines", "Pithampur", "Pondicherry", "Poona", "Porbandar", "Prayagraj", "Puducherry",
             "Pune", "Punjab", "Qatar", "Raichur", "Raipur", "Rajahmundry",
             "Rajasthan", "Rajkot", "Ranchi", "Ratlam", "Ratnagiri", "Rewa",
             "Rishikesh", "Riyadh", "Rohtak", "Roorkee", "Rourkela", "Rudrapur",
@@ -830,18 +861,51 @@ _GAZETTEER_SET, _GAZETTEER_LIST = _load_gazetteer()
 def extract_location(text: str) -> str | None:
     """Extract delivery location using gazetteer match + contextual fallback."""
 
-    # ── Layer 1: Greedy gazetteer lookup (longest match first) ──
+    # ── Layer 1: Gazetteer lookup with origin vs destination resolution ──
+    matches = []
+    used_spans = []
     for entry in _GAZETTEER_LIST:
-        # Build word-boundary pattern for this entry
         pat = r"\b" + re.escape(entry) + r"\b"
-        m = re.search(pat, text, re.I)
-        if m:
+        for m in re.finditer(pat, text, re.I):
             matched = m.group()
-            # Guard: reject if it's a stopword / product word
             if matched.lower() in _LOC_STOPWORDS:
                 continue
-            # Return title-cased as-written
-            return _title_case_location(matched)
+            s, e = m.span()
+            if any(us <= s < ue or us < e <= ue for us, ue in used_spans):
+                continue
+            used_spans.append((s, e))
+
+            # Check context: origin vs destination
+            before = text[max(0, s - 25) : s].lower()
+            after = text[e : min(len(text), e + 25)].lower()
+
+            is_origin = bool(re.search(r"\b(?:from|dispatch\s+from)\s*$", before) or re.search(r"^\s*se\b", after))
+            is_dest = bool(re.search(r"\b(?:to|deliver(?:y)?|dispatch|send|at|in|for)\s*[:\-=]?\s*$", before) or re.search(r"^\s*(?:deliver|delivery|ko)\b", after))
+
+            matches.append({
+                "entry": entry,
+                "matched": matched,
+                "start": s,
+                "end": e,
+                "is_origin": is_origin,
+                "is_dest": is_dest,
+                "is_state": entry.lower() in _STATES,
+            })
+
+    if matches:
+        # If there are explicit destination matches, pick the first destination match
+        dest_matches = [m for m in matches if m["is_dest"] and not m["is_origin"]]
+        if dest_matches:
+            non_state = [m for m in dest_matches if not m["is_state"]]
+            return _title_case_location((non_state or dest_matches)[0]["matched"])
+
+        # Non-origin matches (drop origin if another match exists)
+        non_origin = [m for m in matches if not m["is_origin"]]
+        if non_origin:
+            non_state = [m for m in non_origin if not m["is_state"]]
+            return _title_case_location((non_state or non_origin)[0]["matched"])
+
+        return _title_case_location(matches[0]["matched"])
 
     # ── Layer 2: Contextual preposition patterns ──
     # "to Mumbai", "in Jaipur", "at Surat", "delivery Pune", "for Nagpur"
@@ -871,12 +935,20 @@ def extract_location(text: str) -> str | None:
         if candidate.lower() not in _LOC_STOPWORDS and len(candidate) >= 3:
             return _title_case_location(candidate)
 
-    # ── Layer 3: Terminal comma pattern — ", <City>" at end ──
-    terminal_pat = re.compile(r",\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s*$")
-    m = terminal_pat.search(text)
-    if m:
-        candidate = m.group(1)
-        if candidate.lower() not in _LOC_STOPWORDS and len(candidate) >= 3:
+    # ── Layer 3: Terminal pattern (unseen city at end of RFQ message) ──
+    # e.g. ", Pithampur", or "mono carton 1 lakh 350 gsm Pithampur"
+    term_m = re.search(r"(?:^|[\s,])([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s*[.!?]*$", text)
+    if term_m:
+        candidate = term_m.group(1).strip()
+        c_low = candidate.lower()
+        if (
+            c_low not in _LOC_STOPWORDS
+            and len(candidate) >= 3
+            and c_low not in _PCS_TOKENS
+            and c_low not in _KG_TOKENS
+            and c_low not in _MT_TOKENS
+            and c_low not in VALID_CATEGORIES
+        ):
             return _title_case_location(candidate)
 
     return None
@@ -905,6 +977,9 @@ def parse_rfq(text: str) -> dict:
     try:
         if not isinstance(text, str) or not text.strip():
             return default
+
+        # Defensive guard: cap input length to prevent ReDoS / memory DOS on huge payloads
+        text = text[:10000]
 
         # Stage 1: Normalise
         norm = normalize_text(text)
