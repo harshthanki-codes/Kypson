@@ -1,0 +1,404 @@
+# ═══════════════════════════════════════════════════════════════
+# Indian City / Location Gazetteer for RFQ Location Extraction
+# One entry per line. Lines starting with # are comments.
+# Multi-word entries (e.g. "Navi Mumbai") are matched greedily.
+# ═══════════════════════════════════════════════════════════════
+
+# ── Tier-1 Metros ──
+Mumbai
+Bombay
+Delhi
+New Delhi
+Bangalore
+Bengaluru
+Hyderabad
+Chennai
+Madras
+Kolkata
+Calcutta
+Pune
+Poona
+Ahmedabad
+Jaipur
+
+# ── Major Industrial / Commercial Cities ──
+Surat
+Vadodara
+Baroda
+Rajkot
+Lucknow
+Kanpur
+Nagpur
+Indore
+Bhopal
+Coimbatore
+Madurai
+Visakhapatnam
+Vizag
+Patna
+Ranchi
+Raipur
+Bhubaneswar
+Guwahati
+Dehradun
+Chandigarh
+Ludhiana
+Agra
+Noida
+Greater Noida
+Gurgaon
+Gurugram
+Faridabad
+Ghaziabad
+Kochi
+Cochin
+Thiruvananthapuram
+Trivandrum
+Mysuru
+Mysore
+Mangalore
+Mangaluru
+Hubli
+Jodhpur
+Udaipur
+Nashik
+Aurangabad
+Sambhajinagar
+Solapur
+Kolhapur
+Vijayawada
+Guntur
+Tirupati
+
+# ── Gujarat Industrial Belt ──
+Morbi
+Gandhinagar
+Bhavnagar
+Jamnagar
+Vapi
+Silvassa
+Daman
+Ankleshwar
+Bharuch
+Gandhidham
+Mundra
+Kutch
+Kandla
+Mehsana
+Surendranagar
+Porbandar
+Navsari
+Valsad
+
+# ── Maharashtra Industrial ──
+Thane
+Navi Mumbai
+Bhiwandi
+Kalyan
+Dombivli
+Vasai
+Virar
+Panvel
+Palghar
+Nashik
+Jalgaon
+Dhule
+Sangli
+Ratnagiri
+Amravati
+Akola
+Wardha
+Yavatmal
+Chandrapur
+Gondia
+Latur
+Nanded
+Ichalkaranji
+Satara
+
+# ── North India Industrial ──
+Panipat
+Sonipat
+Karnal
+Ambala
+Hisar
+Rohtak
+Bhiwani
+Bathinda
+Amritsar
+Jalandhar
+Hoshiarpur
+Pathankot
+Mohali
+Panchkula
+Meerut
+Aligarh
+Moradabad
+Varanasi
+Banaras
+Allahabad
+Prayagraj
+Gorakhpur
+Bareilly
+Saharanpur
+Mathura
+Firozabad
+Roorkee
+Kashipur
+Haldwani
+Rishikesh
+Rudrapur
+Haridwar
+Muzaffarnagar
+Agra
+
+# ── Rajasthan ──
+Kota
+Ajmer
+Bikaner
+Bhilwara
+Alwar
+Sikar
+Sri Ganganagar
+Pali
+Barmer
+Chittorgarh
+Kishangarh
+Neemrana
+
+# ── Madhya Pradesh & Chhattisgarh ──
+Ujjain
+Dewas
+Jabalpur
+Gwalior
+Ratlam
+Satna
+Rewa
+Bhilai
+Durg
+Bilaspur
+Korba
+
+# ── South India Industrial ──
+Tirupur
+Salem
+Erode
+Karur
+Namakkal
+Vellore
+Hosur
+Dindigul
+Thanjavur
+Trichy
+Tiruchirappalli
+Pondicherry
+Puducherry
+Belgaum
+Belagavi
+Shimoga
+Davangere
+Bellary
+Ballari
+Raichur
+Gulbarga
+Kalaburagi
+Bidar
+Hassan
+Tumkur
+Mandya
+Kozhikode
+Calicut
+Thrissur
+Ernakulam
+Palakkad
+Nellore
+Kurnool
+Anantapur
+Kadapa
+Ongole
+Eluru
+Rajahmundry
+Kakinada
+Bhimavaram
+Warangal
+Nizamabad
+Karimnagar
+Khammam
+
+# ── East India Industrial ──
+Jamshedpur
+Bokaro
+Dhanbad
+Hazaribagh
+Siliguri
+Durgapur
+Asansol
+Haldia
+Howrah
+Cuttack
+Sambalpur
+Rourkela
+Jharsuguda
+Muzaffarpur
+Gaya
+Bhagalpur
+
+# ── Himachal / Uttarakhand Industrial ──
+Baddi
+Nalagarh
+Parwanoo
+Solan
+Shimla
+Manali
+Selaqui
+Sitarganj
+
+# ── Northeast ──
+Imphal
+Agartala
+Shillong
+Aizawl
+Kohima
+Itanagar
+Gangtok
+Dimapur
+Tezpur
+Jorhat
+Dibrugarh
+
+# ── Goa ──
+Goa
+Panaji
+Vasco
+Margao
+
+# ── Jammu & Kashmir ──
+Jammu
+Srinagar
+
+# ── Indian States (for "delivery to <state>" patterns) ──
+Maharashtra
+Gujarat
+Rajasthan
+Tamil Nadu
+Karnataka
+Andhra Pradesh
+Telangana
+Kerala
+Punjab
+Haryana
+Uttar Pradesh
+Madhya Pradesh
+Bihar
+Jharkhand
+Odisha
+West Bengal
+Assam
+Chhattisgarh
+Uttarakhand
+Himachal Pradesh
+Tripura
+Meghalaya
+Manipur
+Mizoram
+Nagaland
+Arunachal Pradesh
+Sikkim
+
+# ── Middle East / Gulf ──
+Dubai
+Abu Dhabi
+Sharjah
+UAE
+Oman
+Muscat
+Saudi Arabia
+Riyadh
+Jeddah
+Kuwait
+Qatar
+Doha
+Bahrain
+
+# ── Africa ──
+Kenya
+Nairobi
+Mombasa
+Nigeria
+Lagos
+Ghana
+Accra
+Ethiopia
+Addis Ababa
+Tanzania
+Dar es Salaam
+Uganda
+Kampala
+South Africa
+Johannesburg
+Durban
+
+# ── South Asia ──
+Nepal
+Kathmandu
+Bangladesh
+Dhaka
+Chittagong
+Sri Lanka
+Colombo
+Myanmar
+Yangon
+
+# ── Southeast Asia ──
+Thailand
+Bangkok
+Vietnam
+Malaysia
+Kuala Lumpur
+Singapore
+Indonesia
+Jakarta
+Philippines
+Manila
+
+# ── Europe ──
+UK
+United Kingdom
+London
+Germany
+Berlin
+France
+Paris
+Italy
+Netherlands
+Belgium
+Spain
+Turkey
+Istanbul
+Russia
+Moscow
+
+# ── Americas ──
+USA
+United States
+Canada
+Toronto
+Mexico
+Brazil
+Sao Paulo
+
+# ── Other ──
+Australia
+Melbourne
+Sydney
+New Zealand
+Japan
+Tokyo
+South Korea
+China
+Egypt
+Cairo
+Morocco
+Iraq
+Iran
+Afghanistan
