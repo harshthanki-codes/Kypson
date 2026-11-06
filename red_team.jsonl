@@ -73,13 +73,13 @@
 {"text": "20000 mono cartons 350 gsm export to UK", "expected": {"category": "mono_carton", "quantity": 20000, "unit": "pcs", "gsm": 350, "micron": null, "location": "UK"}}
 {"text": "40000 pcs pp woven sacks delivery at Tanzania", "expected": {"category": "woven_sack", "quantity": 40000, "unit": "pcs", "gsm": null, "micron": null, "location": "Tanzania"}}
 {"text": "15 MT packaging film export to Ghana", "expected": {"category": "film", "quantity": 15, "unit": "mt", "gsm": null, "micron": null, "location": "Ghana"}}
-{"text": "bopp bag 65 gsm quotation chahiye", "expected": {"category": "bopp_bag", "quantity": null, "unit": "pcs", "gsm": 65, "micron": null, "location": null}}
-{"text": "fibc bags price list please", "expected": {"category": "fibc", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
-{"text": "corrugated box manufacturer in Ahmedabad", "expected": {"category": "corrugated_box", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": "Ahmedabad"}}
-{"text": "stretch film roll 23 mic rate per kg", "expected": {"category": "film", "quantity": null, "unit": "kg", "gsm": null, "micron": 23, "location": null}}
-{"text": "mono carton box samples needed Pune", "expected": {"category": "mono_carton", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": "Pune"}}
-{"text": "zipper pouch 100g size price Jaipur", "expected": {"category": "pouch", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": "Jaipur"}}
-{"text": "cement bag ad star required", "expected": {"category": "woven_sack", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
+{"text": "bopp bag 65 gsm quotation chahiye", "expected": {"category": "bopp_bag", "quantity": null, "unit": null, "gsm": 65, "micron": null, "location": null}}
+{"text": "fibc bags price list please", "expected": {"category": "fibc", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": null}}
+{"text": "corrugated box manufacturer in Ahmedabad", "expected": {"category": "corrugated_box", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": "Ahmedabad"}}
+{"text": "stretch film roll 23 mic rate per kg", "expected": {"category": "film", "quantity": null, "unit": null, "gsm": null, "micron": 23, "location": null}}
+{"text": "mono carton box samples needed Pune", "expected": {"category": "mono_carton", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": "Pune"}}
+{"text": "zipper pouch 100g size price Jaipur", "expected": {"category": "pouch", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": "Jaipur"}}
+{"text": "cement bag ad star required", "expected": {"category": "woven_sack", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": null}}
 {"text": "5000 pcs bopp bags", "expected": {"category": "bopp_bag", "quantity": 5000, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
 {"text": "1000 kg shrink film", "expected": {"category": "film", "quantity": 1000, "unit": "kg", "gsm": null, "micron": null, "location": null}}
 {"text": "2000 pcs corrugated boxes", "expected": {"category": "corrugated_box", "quantity": 2000, "unit": "pcs", "gsm": null, "micron": null, "location": null}}

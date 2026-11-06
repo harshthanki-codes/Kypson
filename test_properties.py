@@ -32,8 +32,10 @@ class TestProperties(unittest.TestCase):
                 sorted(["category", "quantity", "unit", "gsm", "micron", "location"])
             )
             self.assertIn(res["category"], VALID_CATEGORIES)
-            self.assertIn(res["unit"], ("pcs", "kg", "mt"))
-            if res["quantity"] is not None:
+            if res["quantity"] is None:
+                self.assertIsNone(res["unit"])
+            else:
+                self.assertIn(res["unit"], ("pcs", "kg", "mt"))
                 self.assertIsInstance(res["quantity"], (int, float))
             if res["gsm"] is not None:
                 self.assertIsInstance(res["gsm"], int)

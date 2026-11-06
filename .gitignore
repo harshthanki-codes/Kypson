@@ -27,4 +27,13 @@ adversarial_test.py
 verify_submission.py
 my_tests_notes.jsonl
 frozen_holdout.jsonl
+create_sim_fresh.py
+run_clean_room.py
+build_gazetteer.py
+create_fresh_eval100.py
+eval_cities_off.py
+run_fuzz_10000.py
+verify_regex_identity.py
+fresh_eval*.jsonl
+simulation_fresh*.jsonl
 *.zip

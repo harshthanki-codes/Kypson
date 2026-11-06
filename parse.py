@@ -47,6 +47,7 @@ _DEVA_WORDS = [
     ("बैग", " bag "), ("बोप्प", " bopp "), ("बॉक्स", " box "),
     ("पाउच", " pouch "), ("फिल्म", " film "), ("जंबो", " jumbo "),
     ("जम्बो", " jumbo "), ("पीस", " pcs "), ("किलो", " kg "),
+    ("ग्राम", " gram "), ("मिली", " ml "), ("लीटर", " ltr "),
     ("सैक", " sack "), ("बोरी", " sack "), ("प्लाई", " ply "),
     ("टन", " ton "),
 ]
@@ -58,6 +59,7 @@ _HINDI_FRACTIONS = {
     "dhai": 2.5, "adhai": 2.5, "aadhai": 2.5, "dhaai": 2.5,
     "sava": 1.25, "sawa": 1.25, "sawwa": 1.25,
     "paune": 0.75, "paaune": 0.75, "pone": 0.75,
+    "saadhe": 0.5, "sadhe": 0.5, "sarhe": 0.5,
 }
 
 # -- Hindi cardinal number words (Romanised) → int --
@@ -324,7 +326,7 @@ def mask_interfering_patterns(text: str) -> str:
 # SECTION 5: CATEGORY CLASSIFICATION
 # ═══════════════════════════════════════════════════════════════════════════
 
-def classify_category(text: str) -> str:
+def classify_category(text: str, gsm: int | None = None) -> str:
     """Classify RFQ into one of 7 packaging categories using priority rules."""
     t = text.lower()
 
@@ -349,6 +351,8 @@ def classify_category(text: str) -> str:
     if re.search(r"\b(?:folding|duplex|cosmetic|pharma)\s*(?:carton|cartoon|box)s?\b", t):
         return "mono_carton"
     if re.search(r"\bduplex\s+board\b", t):
+        return "mono_carton"
+    if re.search(r"\bcartoo?ns?\b", t) and ((gsm is not None and gsm >= 200) or re.search(r"\b\d+\s*gsm\b", t) or "gsm" in t) and not re.search(r"\bcorrugated\b|__PLY", t):
         return "mono_carton"
 
     # ── Priority 4: Film (shrink, stretch, cling, BOPP film, LDPE film) ──
@@ -516,6 +520,35 @@ def _find_quantity_candidates(text: str) -> list[dict]:
 
     def _overlaps(start, end):
         return any(s <= start < e or s < end <= e for s, e in used_spans)
+
+    # ── Group 0: Hindi fraction + cardinal + magnitude ──
+    # e.g. "paune do lakh" → (2 - 0.25) × 100000 = 175000
+    # "sawa teen lakh" → (3 + 0.25) × 100000 = 325000
+    # "saadhe char lakh" → (4 + 0.5) × 100000 = 450000
+    pat0 = re.compile(
+        r"\b(" + _FRAC_RE + r")\s+(" + _CARD_RE + r")\s+(" + _MAG_RE + r")\b", re.I
+    )
+    for m in pat0.finditer(text):
+        if _overlaps(m.start(), m.end()):
+            continue
+        frac_w = m.group(1).lower()
+        card_val = _HINDI_CARDINALS[m.group(2).lower()]
+        mag_val = _MAGNITUDES[m.group(3).lower()]
+        if frac_w in ("paune", "paaune", "pone"):
+            calc_val = (card_val - 0.25) * mag_val
+        elif frac_w in ("sava", "sawa", "sawwa"):
+            calc_val = (card_val + 0.25) * mag_val
+        elif frac_w in ("saadhe", "sadhe", "sarhe"):
+            calc_val = (card_val + 0.5) * mag_val
+        else:
+            calc_val = _HINDI_FRACTIONS.get(frac_w, 1.0) * card_val * mag_val
+        candidates.append({
+            "value": calc_val,
+            "start": m.start(), "end": m.end(),
+            "unit": _peek_unit(text, m.end()),
+            "raw": m.group(),
+        })
+        used_spans.append((m.start(), m.end()))
 
     # ── Group 1: Hindi fraction + magnitude ──
     # e.g. "dedh lakh" → 1.5 × 100000 = 150000
@@ -855,7 +888,17 @@ def _load_gazetteer() -> tuple:
     return lookup, sorted_list
 
 
+_AMBIGUOUS_CITY_WORDS = frozenset({
+    "mandi", "una", "pali", "ara", "bhind", "sagar", "dhar", "guna",
+    "gola", "puri", "tonk", "bar", "nana", "line", "cantt", "road",
+    "market", "nagar", "pur", "bad", "garh", "hall", "point",
+})
+
 _GAZETTEER_SET, _GAZETTEER_LIST = _load_gazetteer()
+_CITY_REGEX = re.compile(
+    r"\b(" + "|".join(re.escape(e) for e in _GAZETTEER_LIST) + r")\b",
+    re.I,
+)
 
 
 def extract_location(text: str) -> str | None:
@@ -863,34 +906,33 @@ def extract_location(text: str) -> str | None:
 
     # ── Layer 1: Gazetteer lookup with origin vs destination resolution ──
     matches = []
-    used_spans = []
-    for entry in _GAZETTEER_LIST:
-        pat = r"\b" + re.escape(entry) + r"\b"
-        for m in re.finditer(pat, text, re.I):
-            matched = m.group()
-            if matched.lower() in _LOC_STOPWORDS:
+    for m in _CITY_REGEX.finditer(text):
+        matched = m.group(1)
+        low = matched.lower()
+        if low in _LOC_STOPWORDS:
+            continue
+        s, e = m.span()
+        before = text[max(0, s - 25) : s].lower()
+        after = text[e : min(len(text), e + 25)].lower()
+
+        is_origin = bool(re.search(r"\b(?:from|dispatch\s+from)\s*$", before) or re.search(r"^\s*se\b", after))
+        is_dest = bool(re.search(r"\b(?:to|deliver(?:y)?|dispatch|send|at|in|for)\s*[:\-=]?\s*$", before) or re.search(r"^\s*(?:deliver|delivery|ko)\b", after))
+
+        # Precision guard: ambiguous common words must have capitalisation or prepositional context
+        if low in _AMBIGUOUS_CITY_WORDS:
+            if not (matched[0].isupper() or is_dest or is_origin):
                 continue
-            s, e = m.span()
-            if any(us <= s < ue or us < e <= ue for us, ue in used_spans):
+            if low == "mandi" and re.search(r"\b(?:grain|sabzi|anaj|krishi|vegetable|cotton|timber|fruit)\s*$", before):
                 continue
-            used_spans.append((s, e))
 
-            # Check context: origin vs destination
-            before = text[max(0, s - 25) : s].lower()
-            after = text[e : min(len(text), e + 25)].lower()
-
-            is_origin = bool(re.search(r"\b(?:from|dispatch\s+from)\s*$", before) or re.search(r"^\s*se\b", after))
-            is_dest = bool(re.search(r"\b(?:to|deliver(?:y)?|dispatch|send|at|in|for)\s*[:\-=]?\s*$", before) or re.search(r"^\s*(?:deliver|delivery|ko)\b", after))
-
-            matches.append({
-                "entry": entry,
-                "matched": matched,
-                "start": s,
-                "end": e,
-                "is_origin": is_origin,
-                "is_dest": is_dest,
-                "is_state": entry.lower() in _STATES,
-            })
+        matches.append({
+            "matched": matched,
+            "start": s,
+            "end": e,
+            "is_origin": is_origin,
+            "is_dest": is_dest,
+            "is_state": low in _STATES,
+        })
 
     if matches:
         # If there are explicit destination matches, pick the first destination match
@@ -969,7 +1011,7 @@ def parse_rfq(text: str) -> dict:
     default = {
         "category": "corrugated_box",
         "quantity": None,
-        "unit": "pcs",
+        "unit": None,
         "gsm": None,
         "micron": None,
         "location": None,
@@ -994,10 +1036,14 @@ def parse_rfq(text: str) -> dict:
         cleaned = mask_interfering_patterns(norm)
 
         # Stage 5: Classify category
-        category = classify_category(cleaned)
+        category = classify_category(cleaned, gsm=gsm)
 
         # Stage 6: Extract quantity and unit
         quantity, unit = extract_quantity_and_unit(cleaned, category)
+
+        # Option A: missing quantity ⇒ missing unit
+        if quantity is None:
+            unit = None
 
         # Stage 7: Extract location (search original normalised text for casing)
         location = extract_location(norm)
@@ -1005,7 +1051,7 @@ def parse_rfq(text: str) -> dict:
         # ── Validate and return ──
         if category not in VALID_CATEGORIES:
             category = "corrugated_box"
-        if unit not in ("pcs", "kg", "mt"):
+        if unit not in (None, "pcs", "kg", "mt"):
             unit = "kg" if category == "film" else "pcs"
         if gsm is not None:
             gsm = int(gsm)

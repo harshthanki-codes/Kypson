@@ -1,127 +1,50 @@
-#!/usr/bin/env python3
+"""Scores parse_rfq() from parse.py against a labelled .jsonl file.
+
+Usage:  python score.py            (uses my_tests.jsonl)
+        python score.py other.jsonl
 """
-score.py — Local test runner for parse_rfq.
-
-Reads a JSONL file of {"text": ..., "expected": {...}} lines,
-runs parse_rfq on each, compares per-field, and prints accuracy.
-
-Usage:  python score.py my_tests.jsonl
-"""
-
-import json
-import sys
-import time
+import json, sys, time
 from parse import parse_rfq
 
+FIELDS = ["category", "quantity", "unit", "gsm", "micron", "location"]
 
-def fields_match(expected, actual, field):
-    """Compare a single field between expected and actual output."""
-    e = expected.get(field)
-    a = actual.get(field)
 
-    # Both None / null
-    if e is None and a is None:
-        return True
-
-    # One is None, other is not
-    if e is None or a is None:
-        return False
-
-    # Numeric fields: compare values (int vs float tolerance)
-    if field in ("quantity", "gsm", "micron"):
+def same(field, got, want):
+    if want is None or got is None:
+        return got is None and want is None
+    if field == "quantity":
         try:
-            return abs(float(e) - float(a)) < 0.01
+            return abs(float(got) - float(want)) < 1e-9
         except (TypeError, ValueError):
             return False
-
-    # String fields: case-insensitive exact match
-    if isinstance(e, str) and isinstance(a, str):
-        return e.strip().lower() == a.strip().lower()
-
-    return e == a
+    if field == "location":
+        return str(got).strip().lower() == str(want).strip().lower()
+    return got == want
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python score.py <tests.jsonl>")
-        sys.exit(1)
-
-    test_file = sys.argv[1]
-    all_fields = ["category", "quantity", "unit", "gsm", "micron", "location"]
-
-    # Counters
-    total = 0
-    field_correct = {f: 0 for f in all_fields}
-    all_correct = 0
-    failures = []
-
+def main(path):
+    rows = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
+    per_field = {f: 0 for f in FIELDS}
+    all_ok = 0
     start = time.time()
-
-    with open(test_file, "r", encoding="utf-8") as f:
-        for line_num, line in enumerate(f, 1):
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                row = json.loads(line)
-            except json.JSONDecodeError:
-                print(f"  SKIP line {line_num}: invalid JSON")
-                continue
-
-            text = row.get("text", "")
-            expected = row.get("expected", {})
-            actual = parse_rfq(text)
-            total += 1
-
-            row_ok = True
-            wrong_fields = []
-            for f_name in all_fields:
-                if fields_match(expected, actual, f_name):
-                    field_correct[f_name] += 1
-                else:
-                    row_ok = False
-                    wrong_fields.append(f_name)
-
-            if row_ok:
-                all_correct += 1
+    for r in rows:
+        out = parse_rfq(r["text"])
+        if not isinstance(out, dict):
+            raise TypeError("parse_rfq must return a dict")
+        ok = True
+        for f in FIELDS:
+            if same(f, out.get(f), r["expected"][f]):
+                per_field[f] += 1
             else:
-                failures.append({
-                    "line": line_num,
-                    "text": text[:80],
-                    "wrong": wrong_fields,
-                    "expected": expected,
-                    "actual": actual,
-                })
-
-    elapsed = time.time() - start
-
-    # ── Print results ──
-    print(f"\n{'='*60}")
-    print(f"  Score Report: {test_file}")
-    print(f"{'='*60}")
-    print(f"  Total examples : {total}")
-    print(f"  Exact match    : {all_correct}/{total}  ({100*all_correct/max(total,1):.1f}%)")
-    print(f"  Time           : {elapsed:.2f}s")
-    print()
-    print("  Per-field accuracy:")
-    for f_name in all_fields:
-        pct = 100 * field_correct[f_name] / max(total, 1)
-        print(f"    {f_name:12s} : {field_correct[f_name]:3d}/{total}  ({pct:.1f}%)")
-    print()
-
-    if failures:
-        print(f"  Failures ({len(failures)}):")
-        print(f"  {'-'*56}")
-        for fail in failures[:30]:  # Show up to 30
-            safe_text = fail['text'].encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(sys.stdout.encoding or 'utf-8')
-            print(f"  Line {fail['line']}: \"{safe_text}...\"")
-            for wf in fail["wrong"]:
-                print(f"    {wf}: expected={fail['expected'].get(wf)!r}  got={fail['actual'].get(wf)!r}")
-            print()
-
-    print(f"{'='*60}")
-    return 0 if all_correct == total else 1
+                ok = False
+        all_ok += ok
+    secs = time.time() - start
+    n = len(rows)
+    print(f"Examples: {n}   time: {secs:.2f}s")
+    for f in FIELDS:
+        print(f"  {f:10s} {per_field[f]:3d}/{n}  {per_field[f] / n:6.1%}")
+    print(f"  {'ALL FIELDS':10s} {all_ok:3d}/{n}  {all_ok / n:6.1%}")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main(sys.argv[1] if len(sys.argv) > 1 else "my_tests.jsonl")

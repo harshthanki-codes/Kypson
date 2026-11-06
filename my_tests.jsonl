@@ -34,8 +34,8 @@
 {"text": "25 kg fertilizer bags 20,000 pcs Gwalior", "expected": {"category": "woven_sack", "quantity": 20000, "unit": "pcs", "gsm": null, "micron": null, "location": "Gwalior"}}
 {"text": "sugar bags 50 kg packing 15000 bags Meerut", "expected": {"category": "woven_sack", "quantity": 15000, "unit": "pcs", "gsm": null, "micron": null, "location": "Meerut"}}
 {"text": "rice bags 25kg capacity 8000 pcs Karnal", "expected": {"category": "woven_sack", "quantity": 8000, "unit": "pcs", "gsm": null, "micron": null, "location": "Karnal"}}
-{"text": "need quote for bopp bags 65 gsm Nagpur", "expected": {"category": "bopp_bag", "quantity": null, "unit": "pcs", "gsm": 65, "micron": null, "location": "Nagpur"}}
-{"text": "corrugated boxes rate list chahiye urgently", "expected": {"category": "corrugated_box", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
+{"text": "need quote for bopp bags 65 gsm Nagpur", "expected": {"category": "bopp_bag", "quantity": null, "unit": null, "gsm": 65, "micron": null, "location": "Nagpur"}}
+{"text": "corrugated boxes rate list chahiye urgently", "expected": {"category": "corrugated_box", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": null}}
 {"text": "5000 pcs stand up pouch", "expected": {"category": "pouch", "quantity": 5000, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
 {"text": "LDPE packaging film 300 kg 50 micron Daman", "expected": {"category": "film", "quantity": 300, "unit": "kg", "gsm": null, "micron": 50, "location": "Daman"}}
 {"text": "BOPP BAGS 50000 PCS 60 GSM JODHPUR URGENT", "expected": {"category": "bopp_bag", "quantity": 50000, "unit": "pcs", "gsm": 60, "micron": null, "location": "Jodhpur"}}

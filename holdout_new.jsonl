@@ -84,11 +84,11 @@
 {"text": "cling wrap 12 mic 800 kg Chennai", "expected": {"category": "film", "quantity": 800, "unit": "kg", "gsm": null, "micron": 12, "location": "Chennai"}}
 {"text": "lldpe packaging film 40 mic 1.2 ton Kolkata", "expected": {"category": "film", "quantity": 1.2, "unit": "mt", "gsm": null, "micron": 40, "location": "Kolkata"}}
 {"text": "pp woven fabric roll 10 quintal Panipat", "expected": {"category": "film", "quantity": 1000, "unit": "kg", "gsm": null, "micron": null, "location": "Panipat"}}
-{"text": "bopp bags manufacturer contact details required", "expected": {"category": "bopp_bag", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
-{"text": "corrugated boxes wholesale price list please", "expected": {"category": "corrugated_box", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
-{"text": "jumbo bag 1 ton capacity sample required Pune", "expected": {"category": "fibc", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": "Pune"}}
-{"text": "shrink film rolls best price Ahmedabad", "expected": {"category": "film", "quantity": null, "unit": "kg", "gsm": null, "micron": null, "location": "Ahmedabad"}}
-{"text": "zipper pouch 100g sample needed Jaipur", "expected": {"category": "pouch", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": "Jaipur"}}
+{"text": "bopp bags manufacturer contact details required", "expected": {"category": "bopp_bag", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": null}}
+{"text": "corrugated boxes wholesale price list please", "expected": {"category": "corrugated_box", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": null}}
+{"text": "jumbo bag 1 ton capacity sample required Pune", "expected": {"category": "fibc", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": "Pune"}}
+{"text": "shrink film rolls best price Ahmedabad", "expected": {"category": "film", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": "Ahmedabad"}}
+{"text": "zipper pouch 100g sample needed Jaipur", "expected": {"category": "pouch", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": "Jaipur"}}
 {"text": "cement bags 50000 pcs", "expected": {"category": "woven_sack", "quantity": 50000, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
 {"text": "mono carton 350 gsm 20k pcs", "expected": {"category": "mono_carton", "quantity": 20000, "unit": "pcs", "gsm": 350, "micron": null, "location": null}}
 {"text": "stretch wrap 23 mic 500 kg", "expected": {"category": "film", "quantity": 500, "unit": "kg", "gsm": null, "micron": 23, "location": null}}

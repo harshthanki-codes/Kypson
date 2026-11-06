@@ -55,9 +55,9 @@
 {"text": "fibc bulk bag 1.5 ton SWL 800 pcs Bahrain", "expected": {"category": "fibc", "quantity": 800, "unit": "pcs", "gsm": null, "micron": null, "location": "Bahrain"}}
 {"text": "corrugated cartons 5 ply 1500 units Kuwait", "expected": {"category": "corrugated_box", "quantity": 1500, "unit": "pcs", "gsm": null, "micron": null, "location": "Kuwait"}}
 {"text": "spout pouches 15k pcs Egypt", "expected": {"category": "pouch", "quantity": 15000, "unit": "pcs", "gsm": null, "micron": null, "location": "Egypt"}}
-{"text": "need quote for bopp bags 65 gsm", "expected": {"category": "bopp_bag", "quantity": null, "unit": "pcs", "gsm": 65, "micron": null, "location": null}}
-{"text": "fibc jumbo bag catalogue aur price list bhej do", "expected": {"category": "fibc", "quantity": null, "unit": "pcs", "gsm": null, "micron": null, "location": null}}
-{"text": "stretch wrap film best rate required", "expected": {"category": "film", "quantity": null, "unit": "kg", "gsm": null, "micron": null, "location": null}}
+{"text": "need quote for bopp bags 65 gsm", "expected": {"category": "bopp_bag", "quantity": null, "unit": null, "gsm": 65, "micron": null, "location": null}}
+{"text": "fibc jumbo bag catalogue aur price list bhej do", "expected": {"category": "fibc", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": null}}
+{"text": "stretch wrap film best rate required", "expected": {"category": "film", "quantity": null, "unit": null, "gsm": null, "micron": null, "location": null}}
 {"text": "3 lakh pcs bopp bags 70 gsm Bhilwara", "expected": {"category": "bopp_bag", "quantity": 300000, "unit": "pcs", "gsm": 70, "micron": null, "location": "Bhilwara"}}
 {"text": "teen hazaar corrugated boxes 5 ply Bikaner", "expected": {"category": "corrugated_box", "quantity": 3000, "unit": "pcs", "gsm": null, "micron": null, "location": "Bikaner"}}
 {"text": "char lakh cement bags ad star Ajmer", "expected": {"category": "woven_sack", "quantity": 400000, "unit": "pcs", "gsm": null, "micron": null, "location": "Ajmer"}}
