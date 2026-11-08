@@ -512,6 +512,66 @@ _MAG_RE = _build_magnitude_re()
 _FRAC_RE = _build_fraction_re()
 _CARD_RE = _build_cardinal_re()
 
+_BARE_CARDINALS = {
+    "ek": 1, "do": 2, "teen": 3, "tin": 3, "char": 4,
+    "paanch": 5, "panch": 5, "chhe": 6, "che": 6,
+    "saat": 7, "sat": 7, "aath": 8, "aat": 8,
+    "nau": 9, "das": 10, "dus": 10,
+}
+_BARE_CARD_RE = "|".join(re.escape(w) for w in sorted(_BARE_CARDINALS.keys(), key=len, reverse=True))
+
+_PROD_NOUN_OR_UNIT_FOLLOW = (
+    r"(?:(?:corrugated|master|plain|printed|mono|duplex|woven|pp|bopp|shrink|stretch|jumbo)\s+)?"
+    r"(?:box|boxes|cartoo?ns?|cartoon|bags?|pouche?s?|pauch(?:es)?|sacks?|bore?|bori|rolls?|sheets?|"
+    r"pcs|pc|nos|units?|pieces?|numbers?|kg|kgs|kilo|mt|tons?|tonnes?)"
+)
+_BARE_CARD_PAT = re.compile(
+    r"\b(" + _BARE_CARD_RE + r")\s+(?=" + _PROD_NOUN_OR_UNIT_FOLLOW + r"\b)", re.I
+)
+
+_PRODUCT_KEYWORD_RE = re.compile(
+    r"\b("
+    r"bopp|bop|boop|opp|"
+    r"fibc|jumbo|jambo|"
+    r"mono\s*cartoo?ns?|folding\s*cartoo?ns?|duplex|"
+    r"shrink|stretch|cling|film|rolls?|"
+    r"corrugated|box|boxes|cartoo?ns?|cartoon|"
+    r"woven|sacks?|bori|bore|ad\s*star|adstar|"
+    r"pouche?s?|pauch(?:es)?|doypack|zipper|"
+    r"bags?"
+    r")\b",
+    re.I,
+)
+
+_PROD_DELIM_RE = re.compile(r"(?:\b(?:and|aur)\b|[&,+])", re.I)
+
+
+def _split_first_product_segment(text: str) -> tuple[str, bool]:
+    """Split multi-product RFQ at and/aur/&/,/+ and return (first_segment, is_multi)."""
+    delims = list(_PROD_DELIM_RE.finditer(text))
+    if not delims:
+        return text, False
+
+    slices = []
+    prev = 0
+    for d in delims:
+        slices.append((prev, d.start()))
+        prev = d.end()
+    slices.append((prev, len(text)))
+
+    prod_indices = []
+    for i, (start, end) in enumerate(slices):
+        if _PRODUCT_KEYWORD_RE.search(text[start:end]):
+            prod_indices.append(i)
+
+    if len(prod_indices) < 2:
+        return text, False
+
+    second_idx = prod_indices[1]
+    split_pos = delims[second_idx - 1].start()
+    first_segment = text[:split_pos].strip()
+    return first_segment, True
+
 
 def _find_quantity_candidates(text: str) -> list[dict]:
     """Find all numeric expressions in text with value, position, and unit."""
@@ -601,6 +661,27 @@ def _find_quantity_candidates(text: str) -> list[dict]:
                 "raw": m.group(),
             })
             used_spans.append((m.start(), m.end()))
+
+    # ── Group 2c: bare Hindi cardinal followed by product noun or unit word ──
+    # e.g. "char carton box", "do box", "das pcs" (NOT "do send quote" or "bhej do")
+    for m in _BARE_CARD_PAT.finditer(text):
+        if _overlaps(m.start(), m.end()):
+            continue
+        token = m.group(1).lower()
+        if token == "do":
+            before_txt = text[:m.start()].strip().lower()
+            last_word = before_txt.split()[-1] if before_txt else ""
+            if last_word in ("bhej", "kar", "bata", "de", "kr", "pls", "please"):
+                continue
+        card_val = _BARE_CARDINALS[token]
+        unit = _peek_unit(text, m.end())
+        candidates.append({
+            "value": float(card_val),
+            "start": m.start(), "end": m.end(),
+            "unit": unit,
+            "raw": m.group(1),
+        })
+        used_spans.append((m.start(), m.end()))
 
     # ── Group 3: digits + K/k or L/l suffix ──
     # e.g. "20k" → 20000, "10L" → 1000000 (10 lakh)
@@ -1028,12 +1109,16 @@ def parse_rfq(text: str) -> dict:
         if not norm:
             return default
 
-        # Stage 2-3: Extract GSM and micron (+ mask from text)
-        gsm, norm = extract_gsm(norm)
-        micron, norm = extract_micron(norm)
+        # Multi-product check: isolate first product segment if multi-product
+        first_seg, is_multi = _split_first_product_segment(norm)
+        target_text = first_seg if is_multi else norm
+
+        # Stage 2-3: Extract GSM and micron (+ mask from target text)
+        gsm, target_text = extract_gsm(target_text)
+        micron, target_text = extract_micron(target_text)
 
         # Stage 4: Mask interfering patterns
-        cleaned = mask_interfering_patterns(norm)
+        cleaned = mask_interfering_patterns(target_text)
 
         # Stage 5: Classify category
         category = classify_category(cleaned, gsm=gsm)
@@ -1045,8 +1130,10 @@ def parse_rfq(text: str) -> dict:
         if quantity is None:
             unit = None
 
-        # Stage 7: Extract location (search original normalised text for casing)
-        location = extract_location(norm)
+        # Stage 7: Extract location (from first segment if present, else shared full text)
+        location = extract_location(first_seg) if is_multi else None
+        if not location:
+            location = extract_location(norm)
 
         # ── Validate and return ──
         if category not in VALID_CATEGORIES:
