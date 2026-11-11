@@ -31,26 +31,132 @@ VALID_CATEGORIES = (
     "pouch", "film", "mono_carton", "fibc",
 )
 
+# Option A decision: unit when quantity is missing (set to 'pcs'/'kg' or None)
+MISSING_QUANTITY_UNIT = None
+
 # -- Devanagari digit → ASCII digit --
 _DEVA_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
 
 # -- Devanagari word → Romanised equivalent (sorted longest-first) --
 _DEVA_WORDS = [
+    # Packaging specs and products
     ("कार्टन", " carton "), ("जीएसएम", " gsm "), ("माइक्रोन", " micron "),
+    ("सीमेंट", " cement "), ("हज़ार", " hazaar "), ("हजार", " hazaar "),
+    ("लाख", " lakh "), ("करोड़", " crore "), ("चाहिए", " chahiye "),
+    ("चाहिये", " chahiye "), ("बैग", " bag "), ("बोप्प", " bopp "),
+    ("बॉक्स", " box "), ("पाउच", " pouch "), ("फिल्म", " film "),
+    ("जंबो", " jumbo "), ("जम्बो", " jumbo "), ("पीस", " pcs "),
+    ("किलो", " kg "), ("ग्राम", " gram "), ("मिली", " ml "),
+    ("लीटर", " ltr "), ("सैक", " sack "), ("बोरी", " sack "),
+    ("प्लाई", " ply "), ("टन", " ton "),
+
+    # Numbers and Hindi fractions in Devanagari
+    ("साढ़े", " saadhe "), ("पौने", " paune "), ("डेढ़", " dedh "), ("ढाई", " dhai "), ("सवा", " sava "),
+    ("पंचानवे", " 95 "), ("नब्बे", " 90 "), ("पचासी", " 85 "), ("अस्सी", " 80 "), ("पचहत्तर", " 75 "),
+    ("सत्तर", " 70 "), ("पैंसठ", " 65 "), ("साठ", " 60 "), ("पचपन", " 55 "), ("पचास", " 50 "),
+    ("पैंतालीस", " 45 "), ("चालीस", " 40 "), ("पैंतीस", " 35 "), ("बत्तीस", " 32 "), ("इकत्तीस", " 31 "),
+    ("तीस", " 30 "), ("उनतीस", " 29 "), ("अट्ठाईस", " 28 "), ("सत्ताईस", " 27 "), ("छब्बीस", " 26 "),
+    ("पच्चीस", " 25 "), ("चौबीस", " 24 "), ("तेईस", " 23 "), ("बाईस", " 22 "), ("इक्कीस", " 21 "),
+    ("बीस", " 20 "), ("उन्नीस", " 19 "), ("अठारह", " 18 "), ("सत्रह", " 17 "), ("सोलह", " 16 "),
+    ("पंद्रह", " 15 "), ("पन्द्रह", " 15 "), ("चौदह", " 14 "), ("तेरह", " 13 "), ("बारह", " 12 "),
+    ("ग्यारह", " 11 "), ("दस", " 10 "), ("नौ", " 9 "), ("आठ", " 8 "), ("सात", " 7 "),
+    ("छह", " 6 "), ("छः", " 6 "), ("पांच", " 5 "), ("पाँच", " 5 "), ("चार", " 4 "),
+    ("तीन", " 3 "), ("दो", " 2 "), ("एक", " 1 "), ("सौ", " 100 "),
+
+    # ~150 most common Indian cities / industrial hubs in Devanagari
     ("अहमदाबाद", " Ahmedabad "), ("हैदराबाद", " Hyderabad "), ("कोलकाता", " Kolkata "),
     ("वडोदरा", " Vadodara "), ("लखनऊ", " Lucknow "), ("कानपुर", " Kanpur "),
     ("नागपुर", " Nagpur "), ("मुंबई", " Mumbai "), ("दिल्ली", " Delhi "),
-    ("जयपुर", " Jaipur "), ("इंदौर", " Indore "), ("भोपाल", " Bhopal "),
-    ("सूरत", " Surat "), ("चेन्नई", " Chennai "), ("सीमेंट", " cement "),
-    ("हज़ार", " hazaar "), ("हजार", " hazaar "), ("लाख", " lakh "),
-    ("करोड़", " crore "), ("चाहिए", " chahiye "), ("चाहिये", " chahiye "),
-    ("बैग", " bag "), ("बोप्प", " bopp "), ("बॉक्स", " box "),
-    ("पाउच", " pouch "), ("फिल्म", " film "), ("जंबो", " jumbo "),
-    ("जम्बो", " jumbo "), ("पीस", " pcs "), ("किलो", " kg "),
-    ("ग्राम", " gram "), ("मिली", " ml "), ("लीटर", " ltr "),
-    ("सैक", " sack "), ("बोरी", " sack "), ("प्लाई", " ply "),
-    ("टन", " ton "),
+    ("नई दिल्ली", " Delhi "), ("जयपुर", " Jaipur "), ("इंदौर", " Indore "),
+    ("भोपाल", " Bhopal "), ("सूरत", " Surat "), ("चेन्नई", " Chennai "),
+    ("बेंगलुरु", " Bengaluru "), ("बैंगलोर", " Bengaluru "), ("पुणे", " Pune "),
+    ("पटना", " Patna "), ("नासिक", " Nashik "), ("राजकोट", " Rajkot "),
+    ("भावनगर", " Bhavnagar "), ("जामनगर", " Jamnagar "), ("गांधीनगर", " Gandhinagar "),
+    ("जूनागढ़", " Junagadh "), ("आनंद", " Anand "), ("नवसारी", " Navsari "),
+    ("मोरबी", " Morbi "), ("नडियाद", " Nadiad "), ("सुरेंद्रनगर", " Surendranagar "),
+    ("भरूच", " Bharuch "), ("वापी", " Vapi "), ("अंकलेश्वर", " Ankleshwar "),
+    ("कलोल", " Kalol "), ("पालनपुर", " Palanpur "), ("पाटन", " Patan "),
+    ("दाहोद", " Dahod "), ("गोधरा", " Godhra "), ("भुज", " Bhuj "),
+    ("कच्छ", " Kutch "), ("अमरेली", " Amreli "), ("वलसाड", " Valsad "),
+    ("दीव", " Diu "), ("दमन", " Daman "), ("सिलवासा", " Silvassa "),
+    ("उमरगाम", " Umbergaon "), ("पोरबंदर", " Porbandar "), ("बोटाद", " Botad "),
+    ("गोंडल", " Gondal "), ("हिम्मतनगर", " Himatnagar "), ("मेहसाणा", " Mehsana "),
+    ("महेसाणा", " Mehsana "), ("सायान", " Sayan "), ("सायन", " Sayan "),
+    ("दाभोई", " Dabhoi "), ("कपड़वंज", " Kapadvanj "), ("डीसा", " Deesa "),
+    ("ठाणे", " Thane "), ("औरंगाबाद", " Aurangabad "), ("संभाजीनगर", " Sambhajinagar "),
+    ("सोलापुर", " Solapur "), ("अमरावती", " Amravati "), ("कोल्हापुर", " Kolhapur "),
+    ("नवी मुंबई", " Navi Mumbai "), ("उल्हासनगर", " Ulhasnagar "), ("कल्याण", " Kalyan "),
+    ("डोंबिवली", " Dombivli "), ("वसई", " Vasai "), ("विरार", " Virar "),
+    ("मीरा भयंदर", " Mira Bhayandar "), ("भिवंडी", " Bhiwandi "), ("नांदेड़", " Nanded "),
+    ("जलगांव", " Jalgaon "), ("अकोला", " Akola "), ("लातूर", " Latur "),
+    ("धुले", " Dhule "), ("चंद्रपुर", " Chandrapur "), ("परभणी", " Parbhani "),
+    ("इचलकरंजी", " Ichalkaranji "), ("जालना", " Jalna "), ("भुसावल", " Bhusawal "),
+    ("पनवेल", " Panvel "), ("सतारा", " Satara "), ("सांगली", " Sangli "),
+    ("बारामती", " Baramati "), ("चाकण", " Chakan "), ("तलेगांव", " Talegaon "),
+    ("रालेगांव", " Ralegaon "), ("कर्जत", " Karjat "), ("उमरखेड", " Umarkhed "),
+    ("निलंगा", " Nilanga "), ("इगतपुरी", " Igatpuri "), ("शिरडी", " Shirdi "),
+    ("महाड", " Mahad "), ("रोहा", " Roha "), ("तारापुर", " Tarapur "),
+    ("बोईसर", " Boisar "), ("अहमदनगर", " Ahmednagar "), ("पिंपरी", " Pimpri "),
+    ("चिंचवड़", " Chinchwad "), ("नोएडा", " Noida "), ("ग्रेटर नोएडा", " Greater Noida "),
+    ("गुड़गांव", " Gurgaon "), ("गुरुग्राम", " Gurugram "), ("फरीदाबाद", " Faridabad "),
+    ("गाजियाबाद", " Ghaziabad "), ("आगरा", " Agra "), ("वाराणसी", " Varanasi "),
+    ("प्रयागराज", " Prayagraj "), ("इलाहाबाद", " Allahabad "), ("मेरठ", " Meerut "),
+    ("बरेली", " Bareilly "), ("अलीगढ़", " Aligarh "), ("मुरादाबाद", " Moradabad "),
+    ("सहारनपुर", " Saharanpur "), ("गोरखपुर", " Gorakhpur "), ("झांशी", " Jhansi "),
+    ("मथुरा", " Mathura "), ("हापुड़", " Hapur "), ("मुजफ्फरनगर", " Muzaffarnagar "),
+    ("फिरोजाबाद", " Firozabad "), ("सोनभद्र", " Sonbhadra "), ("जोधपुर", " Jodhpur "),
+    ("कोटा", " Kota "), ("बीकानेर", " Bikaner "), ("अजमेर", " Ajmer "),
+    ("उदयपुर", " Udaipur "), ("भीलवाड़ा", " Bhilwara "), ("अलवर", " Alwar "),
+    ("भरतपुर", " Bharatpur "), ("श्रीगंगानगर", " Sriganganagar "), ("सीकर", " Sikar "),
+    ("पाली", " Pali "), ("नीमराना", " Neemrana "), ("भिवाड़ी", " Bhiwadi "),
+    ("ग्वालियर", " Gwalior "), ("जबलपुर", " Jabalpur "), ("उज्जैन", " Ujjain "),
+    ("सागर", " Sagar "), ("देवास", " Dewas "), ("सतना", " Satna "),
+    ("रतलाम", " Ratlam "), ("रीवा", " Rewa "), ("कटनी", " Katni "),
+    ("सिंगरौली", " Singrauli "), ("बुरहानपुर", " Burhanpur "), ("खंडवा", " Khandwa "),
+    ("पीथमपुर", " Pithampur "), ("लुधियाना", " Ludhiana "), ("अमृतसर", " Amritsar "),
+    ("जालंधर", " Jalandhar "), ("पटियाला", " Patiala "), ("बठिंडा", " Bathinda "),
+    ("मोहाली", " Mohali "), ("चंडीगढ़", " Chandigarh "), ("अंबाला", " Ambala "),
+    ("पानीपत", " Panipat "), ("करनाल", " Karnal "), ("रोहतक", " Rohtak "),
+    ("हिसार", " Hisar "), ("सोनीपत", " Sonipat "), ("बहादुरगढ़", " Bahadurgarh "),
+    ("रेवाड़ी", " Rewari "), ("मानेसर", " Manesar "), ("यमुनानगर", " Yamunanagar "),
+    ("पंचकुला", " Panchkula "), ("गया", " Gaya "), ("भागलपुर", " Bhagalpur "),
+    ("मुजफ्फरपुर", " Muzaffarpur "), ("पूर्णिया", " Purnia "), ("दरभंगा", " Darbhanga "),
+    ("बिहारशरीफ", " Bihar Sharif "), ("रांची", " Ranchi "), ("जमशेदपुर", " Jamshedpur "),
+    ("धनबाद", " Dhanbad "), ("बोकारो", " Bokaro "), ("देवघर", " Deoghar "),
+    ("हजारीबाग", " Hazaribagh "), ("रायपुर", " Raipur "), ("भिलाई", " Bhilai "),
+    ("बिलासपुर", " Bilaspur "), ("दुर्ग", " Durg "), ("कोरबा", " Korba "),
+    ("राजनंदगांव", " Rajnandgaon "), ("रायगढ़", " Raigarh "), ("देहरादून", " Dehradun "),
+    ("हरिद्वार", " Haridwar "), ("रुड़की", " Roorkee "), ("हल्द्वानी", " Haldwani "),
+    ("रुद्रपुर", " Rudrapur "), ("ऋषिकेश", " Rishikesh "), ("काशीपुर", " Kashipur "),
+    ("जम्मू", " Jammu "), ("श्रीनगर", " Srinagar "), ("शिमला", " Shimla "),
+    ("बद्दी", " Baddi "), ("सोलन", " Solan "), ("सिकंदराबाद", " Secunderabad "),
+    ("वारंगल", " Warangal "), ("निजामाबाद", " Nizamabad "), ("करीमनगर", " Karimnagar "),
+    ("खम्मम", " Khammam "), ("रामगुंडम", " Ramagundam "), ("महबूबनगर", " Mahbubnagar "),
+    ("नलगोंडा", " Nalgonda "), ("आदिलाबाद", " Adilabad "), ("जहीराबाद", " Zaheerabad "),
+    ("जंगांव", " Jangaon "), ("निर्मल", " Nirmal "), ("मैसूर", " Mysore "),
+    ("हुबली", " Hubli "), ("धारवाड़", " Dharwad "), ("मंगलुरु", " Mangalore "),
+    ("मंगलोर", " Mangalore "), ("बेलगाम", " Belgaum "), ("गुलबर्गा", " Gulbarga "),
+    ("दावणगेरे", " Davanagere "), ("बेलारी", " Bellary "), ("शिमोगा", " Shimoga "),
+    ("तुमकुर", " Tumkur "), ("होसुर", " Hosur "), ("कोयंबटूर", " Coimbatore "),
+    ("मदुरै", " Madurai "), ("तिरुचिरापल्ली", " Tiruchirappalli "), ("सलेम", " Salem "),
+    ("तिरुपुर", " Tirupur "), ("इरोड", " Erode "), ("वेल्लोर", " Vellore "),
+    ("तूतीकोरिन", " Tuticorin "), ("डिंडीगुल", " Dindigul "), ("तंजावूर", " Thanjavur "),
+    ("नागरकोइल", " Nagercoil "), ("कांचीपुरम", " Kanchipuram "), ("करूर", " Karur "),
+    ("शिवकाशी", " Sivakasi "), ("कोच्चि", " Kochi "), ("तिरुवनंतपुरम", " Thiruvananthapuram "),
+    ("कोझिकोड", " Kozhikode "), ("त्रिशूर", " Thrissur "), ("कोल्लम", " Kollam "),
+    ("पलक्कड़", " Palakkad "), ("अलप्पुझा", " Alappuzha "), ("कन्नूर", " Kannur "),
+    ("विशाखापट्टनम", " Visakhapatnam "), ("विजयवाड़ा", " Vijayawada "), ("गुंटूर", " Guntur "),
+    ("नेल्लोर", " Nellore "), ("कुरनूल", " Kurnool "), ("राजमुंदरी", " Rajahmundry "),
+    ("तिरुपति", " Tirupati "), ("काकीनाडा", " Kakinada "), ("अनंतपुर", " Anantapur "),
+    ("कडपा", " Kadapa "), ("विजयनगरम", " Vizianagaram "), ("एलुरु", " Eluru "),
+    ("ओंगोल", " Ongole "), ("हावड़ा", " Howrah "), ("दुर्गापुर", " Durgapur "),
+    ("आसनसोल", " Asansol "), ("सिलीगुड़ी", " Siliguri "), ("खड़गपुर", " Kharagpur "),
+    ("हल्दिया", " Haldia "), ("भुवनेश्वर", " Bhubaneswar "), ("कटक", " Cuttack "),
+    ("राउरकेला", " Rourkela "), ("संबलपुर", " Sambalpur "), ("बरहमपुर", " Berhampur "),
+    ("बालेश्वर", " Balasore "), ("झारसुगुड़ा", " Jharsuguda "), ("गुवाहाटी", " Guwahati "),
+    ("डिब्रूगढ़", " Dibrugarh "), ("सिलचर", " Silchar "), ("जोरहाट", " Jorhat "),
 ]
+_DEVA_WORDS = sorted(_DEVA_WORDS, key=lambda x: len(x[0]), reverse=True)
 
 # -- Hindi fractional prefixes → float multiplier --
 # "dedh lakh" = 1.5 × 1,00,000 = 1,50,000
@@ -59,7 +165,7 @@ _HINDI_FRACTIONS = {
     "dhai": 2.5, "adhai": 2.5, "aadhai": 2.5, "dhaai": 2.5,
     "sava": 1.25, "sawa": 1.25, "sawwa": 1.25,
     "paune": 0.75, "paaune": 0.75, "pone": 0.75,
-    "saadhe": 0.5, "sadhe": 0.5, "sarhe": 0.5,
+    "saadhe": 0.5, "sadhe": 0.5, "sarhe": 0.5, "saade": 0.5, "sade": 0.5,
 }
 
 # -- Hindi cardinal number words (Romanised) → int --
@@ -148,6 +254,10 @@ _LOC_STOPWORDS = frozenset({
     "white", "transparent", "clear", "virgin", "new", "old",
     "filling", "capacity", "cap", "swl", "load",
     "per", "cost", "budget", "inr", "rs", "rupee",
+    "morning", "evening", "revert", "sincerely", "waiting", "reply",
+    "moq", "kindly", "gstin", "gst", "quote", "quotation", "order",
+    "po", "rfq", "sir", "dear", "hello", "hi", "hey", "team", "rates",
+    "discount", "address",
     # Verbs / common English
     "the", "for", "and", "with", "from", "this", "that",
     "can", "you", "your", "our", "will", "not",
@@ -187,9 +297,64 @@ def normalize_text(text: str) -> str:
     # Pad select punctuation so tokens split cleanly: , ; : ! ? / (but not inside digits)
     text = re.sub(r"([;!?])", r" \1 ", text)
     text = re.sub(r"(?<!\d),|,(?!\d)", " , ", text)
+    text = _composite_numerals(text)
+    text = _english_numbers(text)
     # Collapse whitespace
     text = re.sub(r"\s+", " ", text).strip()
     return text
+
+
+_CARD_WORDS = "|".join(sorted(_HINDI_CARDINALS.keys(), key=len, reverse=True))
+_COMPOSITE_LAKH_THOUS_RE = re.compile(
+    r"\b(\d+|" + _CARD_WORDS + r")\s*(?:lakhs?|lacs?)\s*(?:and|aur)?\s*"
+    r"(\d+|" + _CARD_WORDS + r")\s*(?:haza+r|thousands?|k\b)",
+    re.I,
+)
+
+
+def _composite_numerals(text: str) -> str:
+    """Combine composite numerals: '1 lakh 20 hazaar' -> '120000', 'ek lakh paanch hazaar' -> '105000'."""
+    def _parse_part(w: str) -> int:
+        w = w.lower()
+        if w.isdigit():
+            return int(w)
+        return _HINDI_CARDINALS.get(w, 0)
+
+    def repl(m):
+        lakh_val = _parse_part(m.group(1))
+        thous_val = _parse_part(m.group(2))
+        return str(lakh_val * 100000 + thous_val * 1000)
+
+    return _COMPOSITE_LAKH_THOUS_RE.sub(repl, text)
+
+
+
+_ENG_ONES = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14,
+    "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18,
+    "nineteen": 19, "twenty": 20, "thirty": 30, "forty": 40,
+    "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80,
+    "ninety": 90,
+}
+_ENG_DIGIT = r"(?:one|two|three|four|five|six|seven|eight|nine)"
+_ENG_NUM_RE = re.compile(
+    r"\b(" + "|".join(sorted(_ENG_ONES.keys(), key=len, reverse=True)) + r")"
+    r"(?:[\s-]+(" + _ENG_DIGIT + r"))?"
+    r"(?=\s+(?:thousand|hundred|lakh|lac|crore|tonnes?|tons?|mt|pieces?|pcs|nos|kg|kgs|bags?|boxes?|cartons?|sacks?)\b)",
+    re.I,
+)
+
+
+def _english_numbers(text: str) -> str:
+    """Normalize English number phrases: 'twenty five thousand' -> '25 thousand', 'two tonnes' -> '2 tonnes'."""
+    def repl(m):
+        tens = _ENG_ONES[m.group(1).lower()]
+        units = _ENG_ONES[m.group(2).lower()] if m.group(2) else 0
+        return str(tens + units)
+    return _ENG_NUM_RE.sub(repl, text)
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -255,8 +420,24 @@ def extract_micron(text: str) -> tuple:
 def mask_interfering_patterns(text: str) -> str:
     """Mask numbers that are NOT order quantities: phones, PINs, dims, etc."""
 
-    # Phone numbers: 10-digit Indian mobile (optional +91/0 prefix)
-    text = re.sub(r"(?:\+91[\s\-]?|0)?[6-9]\d{9}\b", " ", text)
+    # Phone numbers: 10-digit Indian mobile (continuous, 5+5, 4+6, 3+3+4, or with prefix)
+    text = re.sub(
+        r"(?:\b(?:contact|call|phone|mobile|mob|ph|whatsapp|wa|cell)\s*[:\-]?\s*)?"
+        r"(?:\+?91[\s\-]?|0)?[6-9](?:\d[\s\-]?){9}\b"
+        r"(?!\s*(?:pcs|pc|nos|bags?|boxes?|cartons?|sacks?|units?|pieces?|rolls?|sheets?|kg|kgs|mt|ton|tonnes?)\b)",
+        " ", text, flags=re.I,
+    )
+
+    # Order / Quote / Reference / Inquiry IDs: "order id 4521", "Quote no 1023", "PO# 9876", "ref: 1234"
+    text = re.sub(
+        r"\b(?:order|quote|quotation|ref|reference|enquiry|inquiry|po|req|rfq|tracking|token)"
+        r"\s*(?:id|no|num|number|#|code)\s*[:\-#]?\s*[A-Z0-9-]*\d[A-Z0-9-]*\b",
+        " ", text, flags=re.I,
+    )
+    text = re.sub(
+        r"\b(?:quote|ref|reference|po|rfq)\s*[:\-#]\s*[A-Z0-9-]*\d[A-Z0-9-]*\b",
+        " ", text, flags=re.I,
+    )
 
     # PIN codes: "pin 440001", "pincode: 110020"
     text = re.sub(
@@ -310,6 +491,22 @@ def mask_interfering_patterns(text: str) -> str:
 
     # Lead times: "10 days", "2 weeks"
     text = re.sub(r"\b\d+\s*(?:days?|weeks?|months?)\b", " ", text, flags=re.I)
+
+    # Supplier constraint / MOQ masking: literal acronym "MOQ" and "minimum order quantity"
+    text = re.sub(
+        r"\b(?:moq|min(?:imum)?\s*order\s*quantity)\s*[:\-]?\s*\d[\d,]*(?:\.\d+)?(?:\s*(?:pcs|pc|nos|bags?|boxes?|cartons?|sacks?|units?|pieces?|rolls?|sheets?|kg|kgs|mt|ton|tonnes?))?\b",
+        " ", text, flags=re.I,
+    )
+    text = re.sub(
+        r"\b\d[\d,]*(?:\.\d+)?\s*(?:pcs|pc|nos|bags?|boxes?|cartons?|sacks?|units?|pieces?|rolls?|sheets?|kg|kgs|mt|ton|tonnes?)?\s*(?:moq|min(?:imum)?\s*order\s*quantity)\b",
+        " ", text, flags=re.I,
+    )
+
+    # Past orders / historical references: "last time 1000 pcs", "earlier 10 ton", "previously 5000", "pehle 2000"
+    text = re.sub(
+        r"\b(?:last\s+time|earlier|previously|pehle|previous(?:\s+order)?)(?:\s+(?:we\s+ordered|we\s+bought|ordered|taken|bought|humne\s+liya))?\s*[:\-]?\s*\d[\d,]*(?:\.\d+)?(?:\s*(?:pcs|pc|nos|bags?|boxes?|cartons?|sacks?|units?|pieces?|rolls?|sheets?|kg|kgs|mt|ton|tonnes?))?\b",
+        " ", text, flags=re.I,
+    )
 
     # Gram / milliliter pack contents: "500 gm", "250g pack", "100 ml" (fill size, not order quantity)
     text = re.sub(
@@ -513,9 +710,9 @@ _FRAC_RE = _build_fraction_re()
 _CARD_RE = _build_cardinal_re()
 
 _BARE_CARDINALS = {
-    "ek": 1, "do": 2, "teen": 3, "tin": 3, "char": 4,
-    "paanch": 5, "panch": 5, "chhe": 6, "che": 6,
-    "saat": 7, "sat": 7, "aath": 8, "aat": 8,
+    "ek": 1, "do": 2, "teen": 3, "char": 4,
+    "paanch": 5, "panch": 5, "chhe": 6,
+    "saat": 7, "aath": 8,
     "nau": 9, "das": 10, "dus": 10,
 }
 _BARE_CARD_RE = "|".join(re.escape(w) for w in sorted(_BARE_CARDINALS.keys(), key=len, reverse=True))
@@ -543,7 +740,7 @@ _PRODUCT_KEYWORD_RE = re.compile(
     re.I,
 )
 
-_PROD_DELIM_RE = re.compile(r"(?:\b(?:and|aur)\b|[&,+])", re.I)
+_PROD_DELIM_RE = re.compile(r"(?:\b(?:and|aur|or|ya)\b|[&,+])", re.I)
 
 
 def _split_first_product_segment(text: str) -> tuple[str, bool]:
@@ -569,7 +766,41 @@ def _split_first_product_segment(text: str) -> tuple[str, bool]:
 
     second_idx = prod_indices[1]
     split_pos = delims[second_idx - 1].start()
+    delim_token = delims[second_idx - 1].group().strip()
     first_segment = text[:split_pos].strip()
+    second_segment = text[delims[second_idx - 1].end():].strip()
+
+    # Comma split guard: stop treating a comma as a product boundary unless BOTH sides contain a quantity
+    if delim_token == ",":
+        cands1 = _find_quantity_candidates(first_segment)
+        valid1 = [
+            c for c in cands1
+            if not _is_capacity(c, first_segment)
+            and not re.search(r"\b(?:for|of)\s*$", first_segment[max(0, c["start"] - 15) : c["start"]].lower())
+        ]
+        cands2 = _find_quantity_candidates(second_segment)
+        valid2 = [
+            c for c in cands2
+            if not _is_capacity(c, second_segment)
+            and not re.search(r"\b(?:for|of)\s*$", second_segment[max(0, c["start"] - 15) : c["start"]].lower())
+        ]
+        if not (valid1 and valid2):
+            return text, False
+
+    # Guard 1: First segment must contain a number (quantity/spec digits or number words, not just product names)
+    has_number = bool(
+        re.search(r"\d", first_segment)
+        or re.search(r"\b(?:" + _CARD_RE + r"|" + _MAG_RE + r"|" + _FRAC_RE + r")\b", first_segment, re.I)
+    )
+    if not has_number:
+        return text, False
+
+    # Guard 2: The two product segments must resolve to different categories
+    cat1 = classify_category(first_segment)
+    cat2 = classify_category(second_segment)
+    if cat1 == cat2:
+        return text, False
+
     return first_segment, True
 
 
@@ -598,7 +829,7 @@ def _find_quantity_candidates(text: str) -> list[dict]:
             calc_val = (card_val - 0.25) * mag_val
         elif frac_w in ("sava", "sawa", "sawwa"):
             calc_val = (card_val + 0.25) * mag_val
-        elif frac_w in ("saadhe", "sadhe", "sarhe"):
+        elif frac_w in ("saadhe", "sadhe", "sarhe", "saade", "sade"):
             calc_val = (card_val + 0.5) * mag_val
         else:
             calc_val = _HINDI_FRACTIONS.get(frac_w, 1.0) * card_val * mag_val
@@ -775,6 +1006,28 @@ def _is_capacity(candidate: dict, text: str) -> bool:
     return False
 
 
+def _is_moq_supplier(candidate: dict, text: str) -> bool:
+    """Return True if candidate is explicitly labeled with literal acronym 'MOQ' or 'minimum order quantity'."""
+    after = text[candidate["end"] : candidate["end"] + 30].lower()
+    before = text[max(0, candidate["start"] - 35) : candidate["start"]].lower()
+    if re.search(r"\b(?:moq|min(?:imum)?\s*order\s*quantity)\s*[:\-]?\s*$", before):
+        return True
+    if re.search(r"^\s*(?:pcs|pc|nos|bags?|boxes?|cartons?|sacks?|units?|pieces?|kg|kgs|mt|ton|tonnes?)?\s*(?:moq|min(?:imum)?\s*order\s*quantity)\b", after):
+        return True
+    return False
+
+
+def _is_min_wording(candidate: dict, text: str) -> bool:
+    """Return True if candidate is qualified by buyer-side 'min' wording (e.g. 'min qty', 'minimum quantity', 'minimum', 'min')."""
+    before = text[max(0, candidate["start"] - 30) : candidate["start"]].lower()
+    after = text[candidate["end"] : candidate["end"] + 30].lower()
+    if re.search(r"\bmin(?:imum)?(?:\s*(?:order|qty|quantity))?\s*[:\-]?\s*$", before):
+        return True
+    if re.search(r"^\s*(?:pcs|pc|nos|bags?|boxes?|cartons?|sacks?|units?|pieces?|kg|kgs|mt|ton|tonnes?)?\s*min(?:imum)?(?:\s*(?:order|qty|quantity))?\b", after):
+        return True
+    return False
+
+
 def _is_fill_weight(
     candidate: dict, text: str, all_candidates: list, category: str
 ) -> bool:
@@ -784,6 +1037,11 @@ def _is_fill_weight(
         return False
     # Only kg/mt candidates can be fill weights
     if candidate["unit"] not in ("kg", "mt"):
+        return False
+    # Metric tonnes are never the fill-weight of small packaging
+    if candidate["unit"] == "mt" and category in (
+        "woven_sack", "bopp_bag", "pouch", "corrugated_box", "mono_carton"
+    ):
         return False
     # Need at least one other candidate to mark this one as fill weight
     if len(all_candidates) < 2:
@@ -799,8 +1057,8 @@ def _is_fill_weight(
         if re.search(r"\b" + re.escape(noun) + r"\b", before):
             return True
 
-    # Pattern: "of <number> kg" — fill weight after "of"
-    if re.search(r"\bof\s*$", before):
+    # Pattern: "of <number> kg" or "for <number> kg" — fill weight after "of" / "for"
+    if re.search(r"\b(?:of|for)\s*$", before):
         return True
 
     # Pattern: "ke <number> kg", "ka <number> kg"
@@ -832,23 +1090,30 @@ def extract_quantity_and_unit(text: str, category: str) -> tuple:
     if not candidates:
         return None, default_unit
 
-    # Filter out capacity and fill-weight candidates
+    # Filter out capacity, fill-weight, and supplier MOQ constraint candidates
     valid = []
     for c in candidates:
         if _is_capacity(c, text):
             continue
         if _is_fill_weight(c, text, candidates, category):
             continue
+        if _is_moq_supplier(c, text):
+            continue
         valid.append(c)
 
     if not valid:
-        # All filtered — check if any candidate has an explicit count (pcs)
-        pcs_cands = [c for c in candidates if c["unit"] == "pcs"]
+        # All filtered — check if any candidate has an explicit count (pcs) that isn't supplier MOQ
+        pcs_cands = [c for c in candidates if c["unit"] == "pcs" and not _is_moq_supplier(c, text)]
         if pcs_cands:
             valid = pcs_cands
         else:
             # All candidates were purely capacity or fill weight specs (no order quantity)
             return None, default_unit
+
+    # Buyer wording ('min ...') numbers are dropped only when another quantity exists in the message
+    non_min_candidates = [c for c in valid if not _is_min_wording(c, text)]
+    if non_min_candidates:
+        valid = non_min_candidates
 
     # Selection: prefer candidates with explicit unit
     if category != "film":
@@ -982,8 +1247,34 @@ _CITY_REGEX = re.compile(
 )
 
 
+_SIGNOFF_WORDS = r"(?:regards|thanks|thank\s+you|kindly\s+revert|kindly|revert|reply|good\s+morning|good\s+evening|waiting|sincerely|warm\s+regards|best\s+regards)"
+_SIGNOFF_TRAILING_RE = re.compile(
+    r"(?:^|[\s,.;!?]+)(?:" + _SIGNOFF_WORDS + r")(?:[\s\w.,!?-]{0,60})?$",
+    re.I,
+)
+
+
+_DEST_PATTERNS = [
+    re.compile(r'(?i:\b(?:deliver(?:y)?|dispatch|send|ship|destination)\s+(?:it\s+)?(?:to|at|in|:|for)?\s*)([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)'),
+    re.compile(r'(?i:\bse\s+)([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)(?i:\s+tak\b)'),
+    re.compile(r'(?i:\b(?:our\s+)?(?:site|warehouse|client)\s+(?:in|at)\s+)([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)'),
+    re.compile(r'(?i:\bto\s+)([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s*(?:[.,!?]|$)'),
+]
+
+
 def extract_location(text: str) -> str | None:
     """Extract delivery location using gazetteer match + contextual fallback."""
+
+    # ── Layer 0: Explicit destination phrase beats origin / general text ──
+    for pat in _DEST_PATTERNS:
+        m0 = pat.search(text)
+        if m0:
+            cand = m0.group(1).strip()
+            words = cand.split()
+            while words and words[0].lower() in _LOC_STOPWORDS:
+                words.pop(0)
+            if words and not any(w.lower() in _LOC_STOPWORDS for w in words) and len(" ".join(words)) >= 3:
+                return _title_case_location(" ".join(words))
 
     # ── Layer 1: Gazetteer lookup with origin vs destination resolution ──
     matches = []
@@ -993,11 +1284,20 @@ def extract_location(text: str) -> str | None:
         if low in _LOC_STOPWORDS:
             continue
         s, e = m.span()
-        before = text[max(0, s - 25) : s].lower()
+        before = text[max(0, s - 35) : s].lower()
         after = text[e : min(len(text), e + 25)].lower()
 
-        is_origin = bool(re.search(r"\b(?:from|dispatch\s+from)\s*$", before) or re.search(r"^\s*se\b", after))
-        is_dest = bool(re.search(r"\b(?:to|deliver(?:y)?|dispatch|send|at|in|for)\s*[:\-=]?\s*$", before) or re.search(r"^\s*(?:deliver|delivery|ko)\b", after))
+        is_origin = bool(
+            re.search(r"\b(?:from|dispatch\s+from|pickup\s+from|pickup|supplier\s+in)\s*$", before)
+            or re.search(r"\bfrom\s+(?:factory|plant|warehouse|mill|godown|unit|site)\s+in\s*$", before)
+            or re.search(r"^\s*se\b", after)
+        )
+        is_dest = bool(
+            not is_origin and (
+                re.search(r"\b(?:to|deliver(?:y)?|dispatch|send|at|in|for)\s*[:\-=]?\s*$", before)
+                or re.search(r"^\s*(?:deliver|delivery|ko)\b", after)
+            )
+        )
 
         # Precision guard: ambiguous common words must have capitalisation or prepositional context
         if low in _AMBIGUOUS_CITY_WORDS:
@@ -1026,7 +1326,15 @@ def extract_location(text: str) -> str | None:
         non_origin = [m for m in matches if not m["is_origin"]]
         if non_origin:
             non_state = [m for m in non_origin if not m["is_state"]]
-            return _title_case_location((non_state or non_origin)[0]["matched"])
+            if non_state:
+                return _title_case_location(non_state[0]["matched"])
+            # If only a state matched, check if it was preceded by an unlisted town: e.g. "Nirmal Telangana"
+            s0 = non_origin[0]["start"]
+            before_state = text[max(0, s0 - 25) : s0].strip()
+            m_town = re.search(r"([A-Z][a-zA-Z]{2,})$", before_state)
+            if m_town and m_town.group(1).lower() not in _LOC_STOPWORDS:
+                return _title_case_location(m_town.group(1))
+            return _title_case_location(non_origin[0]["matched"])
 
         return _title_case_location(matches[0]["matched"])
 
@@ -1059,20 +1367,36 @@ def extract_location(text: str) -> str | None:
             return _title_case_location(candidate)
 
     # ── Layer 3: Terminal pattern (unseen city at end of RFQ message) ──
-    # e.g. ", Pithampur", or "mono carton 1 lakh 350 gsm Pithampur"
-    term_m = re.search(r"(?:^|[\s,])([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s*[.!?]*$", text)
+    # Strip any trailing sign-off clauses first (e.g. ". Thanks", "\nRegards Rajesh Kumar")
+    clean_text = _SIGNOFF_TRAILING_RE.sub("", text.strip())
+    term_m = re.search(r"(?:^|[\s,])([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s*[.!?]*$", clean_text)
     if term_m:
         candidate = term_m.group(1).strip()
-        c_low = candidate.lower()
-        if (
-            c_low not in _LOC_STOPWORDS
-            and len(candidate) >= 3
-            and c_low not in _PCS_TOKENS
-            and c_low not in _KG_TOKENS
-            and c_low not in _MT_TOKENS
-            and c_low not in VALID_CATEGORIES
-        ):
-            return _title_case_location(candidate)
+        words = candidate.split()
+        skip_set = _LOC_STOPWORDS | _PCS_TOKENS | _KG_TOKENS | _MT_TOKENS | {"gsm", "mic", "micron", "ply", "rs", "inr"}
+        while words and words[0].lower() in skip_set:
+            words.pop(0)  # "GSM SAYAN" -> "SAYAN"
+        # Check stopwords per word, not per phrase
+        if words and not any(w.lower() in _LOC_STOPWORDS for w in words):
+            candidate = " ".join(words)
+            c_low = candidate.lower()
+            if (
+                len(candidate) >= 3
+                and c_low not in skip_set
+                and c_low not in VALID_CATEGORIES
+            ):
+                return _title_case_location(candidate)
+
+    # ── Layer 4: message *starts* with an unlisted capitalised word ("Kovvur pouch 60 micron 75000", "Hapur: jumbo bag ...")
+    first = re.match(
+        r"^([A-Z][a-zA-Z]{2,})\s*[:,\-]?\s+(?:(?:[a-zA-Z]+)\s+)?(?:\d|bopp|woven|pouch|jumbo|fibc|stretch|shrink|film|box|carton|mono|corrugated|cement|bag|sack|packaging)",
+        text,
+    )
+    if first:
+        cand = first.group(1).strip()
+        c_low = cand.lower()
+        if c_low not in _LOC_STOPWORDS and c_low not in _PCS_TOKENS and c_low not in _KG_TOKENS:
+            return _title_case_location(cand)
 
     return None
 
@@ -1086,8 +1410,31 @@ def _title_case_location(s: str) -> str:
 # SECTION 8: MAIN ENTRY POINT
 # ═══════════════════════════════════════════════════════════════════════════
 
-def parse_rfq(text: str) -> dict:
-    """Parse a raw Indian B2B packaging RFQ message into 6 structured fields."""
+_NEG_RE = re.compile(
+    r'(?:\b[a-z0-9_/-]+(?:\s+[a-z0-9_/-]+){0,2}\s+(?:nahi|nahin|nhi)\s+(?:chahiye|chahie|chaiye|lagega|hoga)\b'
+    r'|\b(?:dont|don\'t|do\s+not)\s+(?:need|want|require|looking\s+for)?\s*(?:any\s+)?(?:[a-z0-9_/-]+(?:\s+[a-z0-9_/-]+){0,2}\s+(?:bags?|sacks?|pouch(?:es)?|films?|box(?:es)?|cartons?|fibc|wrap))\b'
+    r'|\bno\s+(?!of\b|less\b|more\b)(?:[a-z0-9_/-]+(?:\s+[a-z0-9_/-]+){0,2}\s+(?:bags?|sacks?|pouch(?:es)?|films?|box(?:es)?|cartons?|fibc|wrap))\b'
+    r'|\bnot\s+(?!less\b|more\b|only\b)(?:need\s+|want\s+)?(?:[a-z0-9_/-]+(?:\s+[a-z0-9_/-]+){0,2}\s+(?:bags?|sacks?|pouch(?:es)?|films?|box(?:es)?|cartons?|fibc|wrap))\b)',
+    re.I,
+)
+
+
+def _drop_negated_products(text: str) -> str:
+    """Drop negated product clauses like 'bopp bag nahi chahiye', 'dont need jumbo bag'."""
+    cleaned = _NEG_RE.sub(" ", text)
+    if re.search(r"\d|\b(?:bag|sack|box|film|pouch|carton|fibc|wrap|corrugated|woven|bopp)\b", cleaned, re.I):
+        return cleaned
+    return text
+
+
+def parse_rfq(text: str, debug: bool = False) -> dict:
+    """Parse a raw Indian B2B packaging RFQ message into 6 structured fields.
+
+    Parameters:
+        text: Raw RFQ message string.
+        debug: If True, re-raises any unhandled internal exceptions for debugging
+               instead of swallowing them with the safe default.
+    """
     # Safe default — returned on any unhandled error
     default = {
         "category": "corrugated_box",
@@ -1108,6 +1455,7 @@ def parse_rfq(text: str) -> dict:
         norm = normalize_text(text)
         if not norm:
             return default
+        norm = _drop_negated_products(norm)
 
         # Multi-product check: isolate first product segment if multi-product
         first_seg, is_multi = _split_first_product_segment(norm)
@@ -1128,7 +1476,7 @@ def parse_rfq(text: str) -> dict:
 
         # Option A: missing quantity ⇒ missing unit
         if quantity is None:
-            unit = None
+            unit = MISSING_QUANTITY_UNIT
 
         # Stage 7: Extract location (from first segment if present, else shared full text)
         location = extract_location(first_seg) if is_multi else None
@@ -1154,5 +1502,7 @@ def parse_rfq(text: str) -> dict:
             "location": location,
         }
 
-    except Exception:
+    except Exception as exc:
+        if debug:
+            raise exc
         return default
