@@ -12,6 +12,7 @@ Evaluated with official `score.py` (SHA-256: `C3DD1FF783D61F77F79CBEF25A72ED33C9
 - Blind evaluation (`blind150.jsonl`, 150 msgs): Full 142/150 (94.7%), Tune half 71/75 (94.7%), Report half 71/75 (94.7%).
 - *Independence Caveat:* Report half is not fully independent because audit examples were visible during fixes. 94.7% is an upper bound; realistic hidden-set accuracy is estimated at **75% to 85%**.
 - 104 automated tests passing in pytest (98 in `tests/`, 6 in `test_properties.py`); 20/20 mutation rules killed; 10,007-input fuzz suite passes with 0 crashes.
+- *Zero-gazetteer ablation (pure syntax/prepositions):* `fresh_eval100` 99.0%, `simulation_fresh100` 87.0%.
 
 ### Four Report Failures
 The 4 failures on `blind_report.jsonl` are:
