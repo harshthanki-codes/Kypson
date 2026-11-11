@@ -50,11 +50,15 @@ python score.py my_tests.jsonl
 
 ### 3. Run the Test Suites
 ```bash
-# Run all 28 domain unit tests
-python -m unittest discover tests -v
+# Run all 104 tests via pytest
+pytest
 
-# Run metamorphic, property, and 10,000-case fuzz tests
+# Or via standard unittest runner:
+python -m unittest discover tests -v
 python -m unittest test_properties -v
+
+# Run the 20-rule mutation check
+python eval/run_mutations.py
 ```
 
 ---
@@ -222,7 +226,7 @@ flowchart TD
 
 The repository includes comprehensive verification suites covering unit tests, adversarial red-team evaluations, property tests, and fuzzing.
 
-### 1. Official Evaluation Sets (`score.py`)
+### 1. Evaluation Sets & Measured Benchmark Results (`score.py`)
 
 Run against all evaluation sets:
 
@@ -230,20 +234,21 @@ Run against all evaluation sets:
 # Core submission benchmark (60 messages)
 python score.py my_tests.jsonl
 
-# Holdout evaluation suite (80 messages)
+# Own benchmark sets
 python score.py holdout.jsonl
-
-# Extended holdout suite (100 messages)
 python score.py holdout_new.jsonl
-
-# Adversarial red-team suite (150 messages)
 python score.py red_team.jsonl
+python score.py eval/fresh_eval100.jsonl
+python score.py eval/simulation_fresh100.jsonl
+
+# Independent blind held-out evaluation (75 messages)
+python score.py blind_report.jsonl
 ```
 
 #### Measured Benchmark Results
 
 ```text
-=== my_tests.jsonl (60 examples) ===
+=== my_tests.jsonl (official submission set, 60 examples) ===
   category    60/60  100.0%
   quantity    60/60  100.0%
   unit        60/60  100.0%
@@ -252,66 +257,48 @@ python score.py red_team.jsonl
   location    60/60  100.0%
   ALL FIELDS  60/60  100.0%  (time: 0.05s)
 
-=== holdout.jsonl (80 examples) ===
+=== holdout.jsonl (own test set, 80 examples) ===
   ALL FIELDS  80/80  100.0%  (time: 0.07s)
 
-=== holdout_new.jsonl (100 examples) ===
+=== holdout_new.jsonl (own test set, 100 examples) ===
+  ALL FIELDS 100/100 100.0%  (time: 0.07s)
+
+=== red_team.jsonl (own adversarial test set, 150 examples) ===
+  ALL FIELDS 150/150 100.0%  (time: 0.13s)
+
+=== eval/fresh_eval100.jsonl (own fresh test set, 100 examples) ===
   ALL FIELDS 100/100 100.0%  (time: 0.08s)
 
-=== red_team.jsonl (150 examples) ===
-  ALL FIELDS 150/150 100.0%  (time: 0.12s)
+=== eval/simulation_fresh100.jsonl (own simulation set, 100 examples) ===
+  ALL FIELDS 100/100 100.0%  (time: 0.08s)
+
+=== blind_report.jsonl (independent held-out blind set, 75 examples) ===
+  category    74/75   98.7%
+  quantity    74/75   98.7%
+  unit        74/75   98.7%
+  gsm         75/75  100.0%
+  micron      75/75  100.0%
+  location    73/75   97.3%
+  ALL FIELDS  71/75   94.7%  (time: 0.12s)
 ```
+
+> **Generalisation Note:** While the parser achieves 100.0% across development and holdout evaluation suites and 94.7% on the independent blind report half, realistic performance on completely unconstrained, noisy buyer WhatsApp messages is estimated at **75% to 85%**, reflecting natural ambiguities in raw text (unlisted tier-3 localities written in lowercase, typos, and colloquial noise).
 
 ---
 
 ### 2. Unit Test Suite (`tests/`)
 
-Run the 28 unit tests:
+Run the 98 unit tests:
 
 ```bash
 python -m unittest discover tests -v
 ```
 
-Execution trace:
-```text
-test_explicit_corrugated_with_high_gsm_stays_corrugated (test_carton_gsm_rule.TestCartonGSMRule) ... ok
-test_plain_box_low_gsm_remains_corrugated (test_carton_gsm_rule.TestCartonGSMRule) ... ok
-test_plain_carton_high_gsm_becomes_mono_carton (test_carton_gsm_rule.TestCartonGSMRule) ... ok
-test_ambiguous_words_with_capitalisation_or_preposition_are_extracted (test_location_precision.TestLocationPrecision) ... ok
-test_common_words_not_treated_as_locations_without_context (test_location_precision.TestLocationPrecision) ... ok
-test_null_location_messages_remain_none (test_location_precision.TestLocationPrecision) ... ok
-test_bare_bopp_classification (test_rfq_fixes.TestRFQFixes) ... ok
-test_bare_hindi_cardinal_char_carton_box (test_rfq_fixes.TestRFQFixes) ... ok
-test_bare_hindi_cardinal_do_box (test_rfq_fixes.TestRFQFixes) ... ok
-test_bare_jumbo_classification (test_rfq_fixes.TestRFQFixes) ... ok
-test_bare_shrink_classification (test_rfq_fixes.TestRFQFixes) ... ok
-test_bopp_with_gsm_and_qty (test_rfq_fixes.TestRFQFixes) ... ok
-test_english_prose_do_send_quote_not_treated_as_quantity (test_rfq_fixes.TestRFQFixes) ... ok
-test_fill_weight_50kg_bori_1lakh (test_rfq_fixes.TestRFQFixes) ... ok
-test_fill_weight_cement_bag_50kg_5lakh (test_rfq_fixes.TestRFQFixes) ... ok
-test_fill_weight_pp_bags_25kg_10000 (test_rfq_fixes.TestRFQFixes) ... ok
-test_fill_weight_woven_bag_25kg_ke_2lakh (test_rfq_fixes.TestRFQFixes) ... ok
-test_from_mumbai_deliver_pune (test_rfq_fixes.TestRFQFixes) ... ok
-test_hindi_cardinal_do_hazaar_still_works (test_rfq_fixes.TestRFQFixes) ... ok
-test_hindi_verb_bhej_do_not_treated_as_quantity (test_rfq_fixes.TestRFQFixes) ... ok
-test_multi_product_bopp_and_stretch_film (test_rfq_fixes.TestRFQFixes) ... ok
-test_multi_product_first_segment_no_quantity (test_rfq_fixes.TestRFQFixes) ... ok
-test_multi_product_with_comma_delimiter (test_rfq_fixes.TestRFQFixes) ... ok
-test_pouch_500gm_pack_size_not_quantity (test_rfq_fixes.TestRFQFixes) ... ok
-test_stand_up_pouch_250gm_size_not_quantity (test_rfq_fixes.TestRFQFixes) ... ok
-test_unseen_city_end_bhiwadi (test_rfq_fixes.TestRFQFixes) ... ok
-test_unseen_city_end_chittoor (test_rfq_fixes.TestRFQFixes) ... ok
-test_unseen_city_end_pithampur (test_rfq_fixes.TestRFQFixes) ... ok
-
-----------------------------------------------------------------------
-Ran 28 tests in 0.069s
-
-OK
-```
+All 98 tests pass cleanly in under 0.20s, covering carton GSM rules, gazetteer precision, English number words, composite numerals, Hindi fractions, destination routing, unlisted towns, negation, MOQ masking, spaced/dashed phone numbers, order IDs, fill weights vs. order quantities, Devanagari numerals and cities, and precision probe guards.
 
 ---
 
-### 3. Metamorphic & Fuzz Verification (`test_properties.py`)
+### 3. Metamorphic, Property & Mutation Verification
 
 Run the 6 property test suites:
 
@@ -319,38 +306,34 @@ Run the 6 property test suites:
 python -m unittest test_properties -v
 ```
 
-Execution trace:
-```text
-test_invariance_case_and_padding (test_properties.TestProperties)
-Case variations, extra spaces, and padding with common noise phrases preserve output. ... ok
-test_metamorphic_location_substitution (test_properties.TestProperties)
-Replacing a city with another gazetteer city changes ONLY the location field. ... ok
-test_metamorphic_quantity_equivalences (test_properties.TestProperties)
-Metamorphic: 40 hazaar == 40000 == 40k == 0.4 lakh. ... ok
-test_never_raises_on_fuzz (test_properties.TestProperties)
-Fuzz testing with random character combinations never crashes. ... ok
-test_schema_guarantee (test_properties.TestProperties)
-Always exactly six keys and valid types, even on random/garbage inputs. ... ok
-test_unspaced_tokens_and_boundaries (test_properties.TestProperties)
-Verify unspaced digits and stuck units (500kg, 25mic, 500pcs, 65gsm, 2.5lac) and boundary preservation (15k, 12x18inch, 3ply, A4). ... ok
-
-----------------------------------------------------------------------
-Ran 6 tests in 0.821s
-
-OK
-```
-
-- **Fuzz Guarantee**: Tested across 10,000 randomized ASCII, Unicode, numeric, and symbol strings. 0 exceptions raised; invariant output schema always preserved.
+- **Fuzz Guarantee**: Tested across 500 randomized ASCII, Unicode, numeric, and symbol strings in property tests (and 10,007 strings in `eval/run_fuzz_10000.py`). 0 exceptions raised; invariant output schema always preserved.
 - **Metamorphic Invariance**: Equivalence verified across representations:
   `40 hazaar` $\equiv$ `40000` $\equiv$ `40k` $\equiv$ `0.4 lakh`.
+- **Mutation Testing (`eval/run_mutations.py`)**: 20/20 critical parsing rules systematically mutated (phone masks, PIN masks, price/budget masks, dimension masks, freight masks, lead times, capacity checks, destination routing, composite numerals, Devanagari mappings); 20/20 mutants killed with 0 survivors.
 
 ---
 
-## Performance & Complexity
+## Measured Performance & Complexity
 
-- **Throughput**: ~0.8 milliseconds per message (~1,250 messages/second on a single CPU core).
-- **Memory Footprint**: Under 15 MB resident memory. Gazetteer compiled once at module import into a single trie-equivalent regex pattern.
-- **Dependencies**: 0 third-party packages. Standard library only.
+- **Throughput (Measured)**: 0.97 milliseconds per message (~1,033 messages/second on a single CPU core, measured across 2,950 calls over the 590-message benchmark corpus).
+- **Memory Footprint (Measured)**: 2.95 MB peak memory traced via `tracemalloc`. Gazetteer compiled once at module import into a single regex pattern.
+- **Dependencies**: 0 third-party packages. Standard library only (`re`, `unicodedata`, `pathlib`, `json`).
+
+---
+
+## Known Limits & Assumptions
+
+1. **Option A (Missing Quantity Convention)**: If a message does not state an order volume (e.g. asking for rates or catalogues), both `quantity` and `unit` return `None`. Units are never inferred without an accompanying quantity.
+2. **Carton GSM Rule**: Plain `"box"` defaults to `corrugated_box` unless corrugated markers are contradicted. Plain `"carton"` with `gsm >= 200` classifies as `mono_carton`; lower-GSM cartons remain `corrugated_box`.
+3. **Multi-Product Scoping**: When an inquiry mentions two distinct product categories with separate quantities, the parser isolates and returns attributes for the first product, paired with the shared delivery destination. Compound adjective phrases (e.g. `"bopp aur woven bags 5000 pcs"`) where the first clause contains no quantity keep their unified volume.
+4. **Metre vs Metric Ton Ambiguity**: An inquiry for `"500 mt stretch film"` is canonicalised to metric tonnes (`unit: "mt"`) per specification, even though buyers occasionally mean linear running metres.
+5. **Gazetteer Coverage**: Locations not present in `cities.txt` (1,708 entries) rely on prepositional cues (`to X`, `in X`, `at X`, `delivery X`) or terminal message patterns. Ambiguous homonyms (`mandi`, `una`, `pali`, `sagar`) are rejected as locations without explicit capitalisation or prepositional context.
+
+---
+
+## AI Disclosure
+
+Full tool usage disclosures (models, tools, and roles) and personal verification statements are documented in [`NOTE.md`](file:///c:/Users/Admin/Desktop/Kypson/NOTE.md).
 
 ---
 
@@ -361,6 +344,7 @@ OK
 ├── parse.py                      # Main 7-stage deterministic extraction pipeline
 ├── score.py                      # Official scorer utility (SHA-256 verified)
 ├── NOTE.md                       # Technical note: approach, assumptions & real failure cases
+├── README.md                     # Architecture, prototypes & verification documentation
 ├── cities.txt                    # 1,708-entry gazetteer (Indian industrial hubs & export cities)
 ├── requirements.txt              # Environment specification (Python 3.10+)
 │
@@ -370,10 +354,17 @@ OK
 ├── red_team.jsonl                # Adversarial evaluation set (150 examples)
 │
 ├── test_properties.py            # Metamorphic, invariance, and fuzz test suites
-└── tests/
-    ├── test_rfq_fixes.py         # Regression tests for real-world RFQ parsing edge cases
-    ├── test_carton_gsm_rule.py   # Unit tests for carton vs mono carton GSM rules
-    └── test_location_precision.py# Precision tests for location gazetteer disambiguation
+├── tests/
+│   ├── test_rfq_fixes.py         # Regression tests for real-world RFQ parsing edge cases
+│   ├── test_carton_gsm_rule.py   # Unit tests for carton vs mono carton GSM rules
+│   └── test_location_precision.py# Precision tests for location gazetteer disambiguation
+└── eval/
+    ├── fresh_eval100.jsonl       # Additional evaluation set (100 examples)
+    ├── simulation_fresh100.jsonl # Simulation evaluation set (100 examples)
+    ├── run_mutations.py          # Automated 20-rule mutation verification runner
+    ├── run_fuzz_10000.py         # 10,000-string stress fuzz test script
+    ├── eval_cities_off.py        # Ablation study script (cities-off evaluation)
+    └── verify_regex_identity.py  # Regex identity verification utility
 ```
 
 ---
